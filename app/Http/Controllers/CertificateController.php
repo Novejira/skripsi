@@ -67,7 +67,7 @@ class CertificateController extends Controller
         }
 
         // Tambahkan teks ke gambar
-        $img->text(strtoupper($name), 1000, 570, function ($font) use ($fontPath) {
+        $img->text(strtoupper($name), 1000, 500, function ($font) use ($fontPath) {
             if ($fontPath) {
                 $font->filename($fontPath);
             }
@@ -94,12 +94,12 @@ class CertificateController extends Controller
 
          // Generate URL untuk QR Code
         $url = route('certificate.view', ['id' => $certificate->id]);
-        $qrPng = $qr->format('png')->size(300)->generate($url);
+        $qrPng = $qr->format('png')->size(250)->generate($url);
         $qrPath = public_path('generated_certificates/qr_' . $certificate->id . '.png');
         file_put_contents($qrPath, $qrPng);
 
         $qrImage = $imageManager->read($qrPath);
-        $img->place($qrImage, 'bottom-right', 50, 50);
+        $img->place($qrImage, 'bottom-left', 260, 70);
 
         $img->save($outputPath);
 
