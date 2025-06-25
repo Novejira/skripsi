@@ -38,7 +38,7 @@
         @if (isset($fileName))
             <img src="{{ asset('generated_certificates/' . $fileName) }}" alt="Sertifikat" class="certificate-img">
             <div class="mt-4">
-                <a href="{{ asset('generated_certificates/' . $fileName) }}" download class="btn btn-success me-2">Unduh Sertifikat</a>
+                <a href="{{ route('certificate.download.pdf', ['id' => $certificateData->id]) }}" class="btn btn-success me-2">Unduh PDF Sertifikat</a>
                 <a href="{{ route('certificate.form') }}" class="btn btn-secondary">Buat Sertifikat Lain</a>
             </div>
         @else

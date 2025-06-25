@@ -18,3 +18,4 @@ use App\Http\Controllers\CertificateController;
 Route::get('/', [CertificateController::class, 'showForm'])->name('certificate.form');
 Route::post('/certificate/generate', [CertificateController::class, 'generate'])->name('certificate.generate');
 Route::get('/certificate/view/{id}', [CertificateController::class, 'view'])->name('certificate.view');
+Route::get('/certificate/download-pdf/{id}', [CertificateController::class, 'downloadPdf'])->name('certificate.download.pdf');

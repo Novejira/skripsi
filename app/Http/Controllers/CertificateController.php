@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use SimpleSoftwareIO\QrCode\Generator;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class CertificateController extends Controller
 {
@@ -117,5 +119,35 @@ class CertificateController extends Controller
     // Tampilkan view detail dan kirim data sertifikat
     return view('certificate.view', compact('certificate'));
 }
+
+    public function downloadPdf($id)
+    {
+        $certificate = CreateCertificate::findOrFail($id);
+        $imagePath = public_path('generated_certificates/' . $certificate->file_name);
+
+        if (!file_exists($imagePath)) {
+            abort(404, 'File sertifikat tidak ditemukan');
+        }
+
+        // Mendapatkan dimensi asli dari gambar sertifikat (PNG)
+        // Fungsi getimagesize() mengembalikan array: [width, height, type, attribute]
+        list($widthPx, $heightPx) = getimagesize($imagePath);
+
+        // Mengkonversi piksel ke poin (1 inci = 72 poin, dan asumsi 96 DPI untuk gambar web)
+        // Ini akan membuat halaman PDF memiliki ukuran yang sama persis dengan gambar Anda dalam satuan poin.
+        $widthPt = $widthPx * 72 / 96; // Konversi dari px ke pt
+        $heightPt = $heightPx * 72 / 96; // Konversi dari px ke pt
+
+        // Menentukan orientasi berdasarkan dimensi gambar
+        $orientation = ($widthPx > $heightPx) ? 'landscape' : 'portrait';
+
+       $pdf = Pdf::loadView('certificate.pdf_view', [
+                'certificate' => $certificate,
+                'imagePath' => $imagePath
+        ])->setPaper('a4', 'landscape'); // tambahkan ini
+
+        return $pdf->download('sertifikat_' . Str::slug($certificate->name) . '.pdf');
+    }
+
 
 }
