@@ -1,31 +1,60 @@
-<form action="{{ route('certificate.generate') }}" method="POST">
-    @csrf
-    <div class="mb-3">
-        <label for="participant_name" class="form-label">Nama:</label>
-        <input type="text" class="form-control" id="participant_name" name="participant_name" value="{{ old('participant_name') }}" required>
-    </div>
+@extends('layouts.app')
 
-    <div class="mb-3">
-        <label for="birth_place" class="form-label">Lahir di:</label>
-        <input type="text" class="form-control" id="birth_place" name="birth_place" value="{{ old('birth_place') }}">
-    </div>
+@section('content')
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Formulir Pembuatan Sertifikat</h4>
+                </div>
+                <div class="card-body">
 
-    <div class="mb-3">
-        <label for="birth_date" class="form-label">Tanggal Lahir:</label>
-        <input type="text" class="form-control" id="birth_date" name="birth_date" placeholder="cth: 26 Juni 2002" value="{{ old('birth_date') }}">
-    </div>
+                    {{-- Tampilkan pesan error jika ada --}}
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
 
-    <div class="mb-3">
-        <label for="student_id" class="form-label">Nomor Induk Mahasiswa:</label>
-        <input type="number" class="form-control" id="student_id" name="student_id" value="{{ old('student_id') }}" required>
-    </div>
+                    <form action="{{ route('certificate.generate') }}" method="POST">
+                        @csrf
 
-    <div class="mb-3">
-        <label for="institution" class="form-label">Institusi:</label>
-        <input type="text" class="form-control" id="institution" name="institution" value="{{ old('institution') }}">
-    </div>
+                        <div class="mb-3">
+                            <label for="participant_name" class="form-label">Nama Lengkap</label>
+                            <input type="text" class="form-control" id="participant_name" name="participant_name" value="{{ old('participant_name') }}" required>
+                        </div>
 
-    <div class="d-grid gap-2">
-        <button type="submit" class="btn btn-primary btn-lg">Generate Sertifikat</button>
+                        <div class="mb-3">
+                            <label for="birth_place" class="form-label">Tempat Lahir</label>
+                            <input type="text" class="form-control" id="birth_place" name="birth_place" value="{{ old('birth_place') }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="birth_date" class="form-label">Tanggal Lahir</label>
+                            <input type="text" class="form-control" id="birth_date" name="birth_date" placeholder="cth: 26 Juni 2002" value="{{ old('birth_date') }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="student_id" class="form-label">Nomor Induk Mahasiswa (NIM)</label>
+                            <input type="number" class="form-control" id="student_id" name="student_id" value="{{ old('student_id') }}" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="institution" class="form-label">Asal Institusi</label>
+                            <input type="text" class="form-control" id="institution" name="institution" value="{{ old('institution') }}">
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">🎓 Generate Sertifikat</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
     </div>
-</form>
+@endsection
