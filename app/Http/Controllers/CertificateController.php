@@ -40,13 +40,21 @@ class CertificateController extends Controller
         // Validasi input
         $request->validate([
             'participant_name' => 'required|string|min:3|max:255',
+            'birth_place' => 'nullable|string|max:255',
+            'birth_date' => 'nullable|string|max:255',
+            'student_id' => 'required|numeric',
+            'institution' => 'nullable|string|max:255',
         ], [
-            'participant_name.required' => 'Nama peserta wajib diisi.',
-            'participant_name.min' => 'Nama peserta minimal 3 karakter.',
-            'participant_name.max' => 'Nama peserta maksimal 255 karakter.',
+            'participant_name.required' => 'Nama wajib diisi.',
+            'student_id.required' => 'Nomor Induk Mahasiswa wajib diisi.',
+            'student_id.numeric' => 'Nomor Induk Mahasiswa harus berupa angka.',
         ]);
 
         $name = $request->input('participant_name');
+        $birthPlace = $request->input('birth_place');
+        $birthDate = $request->input('birth_date');
+        $nim = $request->input('student_id');
+        $institusi = $request->input('institution'); // ✅ Tambahan ini
 
         // Buat instance dari model Certificate
         $certificateData = new Certificate($name);
@@ -69,11 +77,48 @@ class CertificateController extends Controller
         }
 
         // Tambahkan teks ke gambar
-        $img->text(strtoupper($name), 1000, 500, function ($font) use ($fontPath) {
+        $img->text(strtoupper($name), 330, 660, function ($font) use ($fontPath) {
             if ($fontPath) {
                 $font->filename($fontPath);
             }
-            $font->size(100);
+            $font->size(30);
+            $font->color('#000000');
+            $font->align('center');
+            $font->valign('middle');
+        });
+        $img->text(strtoupper($birthPlace), 250, 755, function ($font) use ($fontPath) {
+            if ($fontPath) {
+                $font->filename($fontPath);
+            }
+            $font->size(30);
+            $font->color('#000000');
+            $font->align('center');
+            $font->valign('middle');
+        });
+
+        $img->text(strtoupper($birthDate), 282, 855, function ($font) use ($fontPath) {
+            if ($fontPath) {
+                $font->filename($fontPath);
+            }
+            $font->size(30);
+            $font->color('#000000');
+            $font->align('center');
+            $font->valign('middle');
+        });
+        $img->text(strtoupper($nim), 235, 950, function ($font) use ($fontPath) {
+            if ($fontPath) {
+                $font->filename($fontPath);
+            }
+            $font->size(30);
+            $font->color('#000000');
+            $font->align('center');
+            $font->valign('middle');
+        });
+        $img->text(strtoupper($institusi), 973, 660, function ($font) use ($fontPath) {
+            if ($fontPath) {
+                $font->filename($fontPath);
+            }
+            $font->size(30);
             $font->color('#000000');
             $font->align('center');
             $font->valign('middle');
@@ -86,6 +131,11 @@ class CertificateController extends Controller
         $certificate = CreateCertificate::create([
         'name' => $name,
         'file_name' => $fileName,
+        'birth_place' => $birthPlace,
+        'birth_date' => $birthDate,
+        'student_id' => $nim,
+        'institution' => $institusi,
+
         ]);
 
         if (!file_exists($outputDir)) {
@@ -101,7 +151,7 @@ class CertificateController extends Controller
         file_put_contents($qrPath, $qrPng);
 
         $qrImage = $imageManager->read($qrPath);
-        $img->place($qrImage, 'bottom-left', 260, 70);
+        $img->place($qrImage, 'bottom-left', 250, 200);
 
         $img->save($outputPath);
 
@@ -144,7 +194,7 @@ class CertificateController extends Controller
        $pdf = Pdf::loadView('certificate.pdf_view', [
                 'certificate' => $certificate,
                 'imagePath' => $imagePath
-        ])->setPaper('a4', 'landscape'); // tambahkan ini
+        ])->setPaper('a4'); // tambahkan ini
 
         return $pdf->download('sertifikat_' . Str::slug($certificate->name) . '.pdf');
     }

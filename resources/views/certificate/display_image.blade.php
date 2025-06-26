@@ -32,8 +32,6 @@
 <body>
     <div class="container certificate-container">
         <h2 class="mb-4">Sertifikat Berhasil Dibuat!</h2>
-        <p class="info-text">Untuk **{{ $certificateData->name }}**</p>
-        <p class="info-text">Diterbitkan pada: {{ $certificateData->issueDate }} (ID: {{ $certificateData->certificateId }})</p>
 
         @if (isset($fileName))
             <img src="{{ asset('generated_certificates/' . $fileName) }}" alt="Sertifikat" class="certificate-img">

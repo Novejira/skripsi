@@ -15,6 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('file_name');
+            $table->string('birth_place')->nullable();
+            $table->string('birth_date')->nullable();
+            $table->integer('nim')->nullable();
+            $table->string('institution')->nullable();
+
             $table->timestamps();
         });
     }
