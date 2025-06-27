@@ -5,7 +5,7 @@
         <div class="col-md-8">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Formulir Pembuatan Sertifikat</h4>
+                    <h4 class="mb-0">Formulir Pendaftaraan TOEFL BATCH 3 </h4>
                 </div>
                 <div class="card-body">
 
@@ -40,7 +40,7 @@
 
                         <div class="mb-3">
                             <label for="student_id" class="form-label">Nomor Induk Mahasiswa (NIM)</label>
-                            <input type="number" class="form-control" id="student_id" name="student_id" value="{{ old('student_id') }}" required>
+                            <input type="text" class="form-control" id="student_id" name="student_id" value="{{ old('student_id') }}" required pattern="[0-9]+" title="NIM harus berupa angka">
                         </div>
 
                         <div class="mb-3">
