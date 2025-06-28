@@ -10,9 +10,30 @@
     </style>
 </head>
 <body class="p-5">
-    <div class="container">
-        <h2 class="text-center mb-4">Detail Sertifikat</h2>
-        <p class="justify-text"><strong>Nama Peserta:</strong> {{ $certificate->name }}</p>
+    <div class="row">
+    <div class="col-md-6">
+        <p><strong>Nomor Sertifikat:</strong> {{ $certificate->certificate_number }}</p>
+        <p><strong>Nama Peserta:</strong> {{ $certificate->participant_name }}</p>
+        <p><strong>Nama Kegiatan:</strong> {{ $certificate->activity_name }}</p>
     </div>
+    <div class="col-md-6">
+        <p><strong>Tanggal Tes:</strong> {{ $certificate->test_date }}</p>
+        <p><strong>Tempat Tes:</strong> {{ $certificate->test_location }}</p>
+    </div>
+</div>
+<hr>
+<h4>Rincian Skor:</h4>
+<div class="row">
+    <div class="col-md-4">
+        <p><strong>Listening Comprehension:</strong> {{ $certificate->listening_score }}</p>
+    </div>
+    <div class="col-md-4">
+        <p><strong>Structure & Written Expression:</strong> {{ $certificate->written_score }}</p>
+    </div>
+    <div class="col-md-4">
+        <p><strong>Reading Comprehension:</strong> {{ $certificate->reading_score }}</p>
+    </div>
+</div>
+<h3 class="text-center mt-4">Total Score: {{ $certificate->total_score }}</h3>
 </body>
 </html>
