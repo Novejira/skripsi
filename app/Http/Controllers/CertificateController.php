@@ -12,6 +12,8 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use SimpleSoftwareIO\QrCode\Generator;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+
 
 
 class CertificateController extends Controller
@@ -77,14 +79,14 @@ class CertificateController extends Controller
         }
 
         // Tambahkan teks ke gambar
-        $img->text(strtoupper($name), 330, 660, function ($font) use ($fontPath) {
+        $img->text(strtoupper($name), 250, 660, function ($font) use ($fontPath) {
             if ($fontPath) {
                 $font->filename($fontPath);
             }
             $font->size(30);
             $font->color('#000000');
-            $font->align('center');
-            $font->valign('middle');
+            $font->align('left');
+            $font->valign('top');
         });
         $img->text(strtoupper($birthPlace), 250, 755, function ($font) use ($fontPath) {
             if ($fontPath) {
@@ -168,7 +170,7 @@ class CertificateController extends Controller
 
     // Tampilkan view detail dan kirim data sertifikat
     return view('certificate.view', compact('certificate'));
-}
+    }
 
     public function downloadPdf($id)
     {
@@ -198,6 +200,127 @@ class CertificateController extends Controller
 
         return $pdf->download('sertifikat_' . Str::slug($certificate->name) . '.pdf');
     }
+
+        public function showAdminForm(Request $request)
+    {
+        $data = $request->session()->get('form_data');
+        if (!$data) return redirect()->route('certificate.form')->withErrors(['Silakan isi data peserta terlebih dahulu.']);
+
+        return view('certificate.admin_form', ['participant' => $data]);
+    }
+
+        public function finalGenerate(Request $request, Generator $qr)
+    {
+        $request->validate([
+            'test_date' => 'required|date',
+            'validity' => 'required|string|max:255',
+            'certificate_number' => 'required|string|max:255',
+        ]);
+
+        $participant = $request->session()->get('form_data');
+
+        if (!$participant) {
+            return redirect()->route('certificate.form')->withErrors(['Data peserta tidak ditemukan.']);
+        }
+
+        // Gabungkan input admin ke data peserta
+        $participant = array_merge($participant, $request->only([
+            'test_date', 'validity', 'certificate_number'
+        ]));
+
+        $imageManager = new ImageManager(new GdDriver());
+
+        $templatePath = public_path('certificates/certificate_template.png');
+        if (!file_exists($templatePath)) {
+            return back()->withErrors(['template_error' => 'Template sertifikat tidak ditemukan.']);
+        }
+
+        $img = $imageManager->read($templatePath);
+        $fontPath = public_path('fonts/OpenSans-Regular.ttf');
+        if (!file_exists($fontPath)) {
+            $fontPath = null;
+        }
+
+        // Tambahkan semua teks ke sertifikat
+        $img->text(strtoupper($participant['participant_name']), 122, 655, function ($font) use ($fontPath) {
+            if ($fontPath) $font->filename($fontPath);
+            $font->size(30); $font->color('#000000'); $font->align('left'); $font->valign('top');
+        });
+        $img->text(strtoupper($participant['birth_place']), 122, 750, function ($font) use ($fontPath) {
+            if ($fontPath) $font->filename($fontPath);
+            $font->size(30); $font->color('#000000'); $font->align('left'); $font->valign('top');
+        });
+        $img->text(strtoupper($participant['birth_date']), 122, 850, function ($font) use ($fontPath) {
+            if ($fontPath) $font->filename($fontPath);
+            $font->size(30); $font->color('#000000'); $font->align('left'); $font->valign('top');
+        });
+        $img->text(strtoupper($participant['student_id']), 122, 945, function ($font) use ($fontPath) {
+            if ($fontPath) $font->filename($fontPath);
+            $font->size(30); $font->color('#000000'); $font->align('left'); $font->valign('top');
+        });
+        $img->text(strtoupper($participant['institution']), 720, 655, function ($font) use ($fontPath) {
+            if ($fontPath) $font->filename($fontPath);
+            $font->size(30); $font->color('#000000'); $font->align('left'); $font->valign('top');
+        });
+
+        // Teks tambahan dari form admin
+        $img->text(strtoupper($participant['certificate_number']), 720, 940, function ($font) use ($fontPath) {
+            if ($fontPath) $font->filename($fontPath);
+            $font->size(30); $font->color('#000000'); $font->align('left'); $font->valign('top');
+        });
+
+
+        $tanggalTes = \Carbon\Carbon::parse($participant['test_date'])->format('d/m/Y');
+
+        $img->text($tanggalTes, 720, 745, function ($font) use ($fontPath) {
+            if ($fontPath) $font->filename($fontPath);
+            $font->size(30); $font->color('#000000'); $font->align('left'); $font->valign('top');
+        });
+
+
+        $img->text(strtoupper($participant['validity']), 720, 845, function ($font) use ($fontPath) {
+            if ($fontPath) $font->filename($fontPath);
+            $font->size(30); $font->color('#000000'); $font->align('left'); $font->valign('top');
+        });
+
+        // Simpan gambar
+        $fileName = 'certificate_' . uniqid() . '.png';
+        $outputDir = public_path('generated_certificates');
+        if (!file_exists($outputDir)) mkdir($outputDir, 0777, true);
+        $outputPath = $outputDir . '/' . $fileName;
+
+        // Simpan ke DB
+        $certificate = CreateCertificate::create([
+            'name' => $participant['participant_name'],
+            'birth_place' => $participant['birth_place'],
+            'birth_date' => $participant['birth_date'],
+            'student_id' => $participant['student_id'],
+            'institution' => $participant['institution'],
+            'file_name' => $fileName,
+            'certificate_number' => $participant['certificate_number'],
+            'test_date' => $participant['test_date'],
+            'validity' => $participant['validity'],
+        ]);
+
+        // Generate QR Code
+        $url = route('certificate.view', ['id' => $certificate->id]);
+        $qrPng = $qr->format('png')->size(250)->generate($url);
+        $qrPath = public_path('generated_certificates/qr_' . $certificate->id . '.png');
+        file_put_contents($qrPath, $qrPng);
+
+        $qrImage = $imageManager->read($qrPath);
+        $img->place($qrImage, 'bottom-left', 250, 200);
+        $img->save($outputPath);
+
+        return view('certificate.display_image', [
+            'certificateData' => $certificate,
+            'fileName' => $fileName,
+        ]);
+    }
+
+
+
+
 
 
 }

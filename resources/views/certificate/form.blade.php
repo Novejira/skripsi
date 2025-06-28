@@ -20,7 +20,7 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('certificate.generate') }}" method="POST">
+                        <form action="{{ route('certificate.to-admin') }}" method="POST">
                         @csrf
 
                         <div class="mb-3">
@@ -35,7 +35,7 @@
 
                         <div class="mb-3">
                             <label for="birth_date" class="form-label">Tanggal Lahir</label>
-                            <input type="text" class="form-control" id="birth_date" name="birth_date" placeholder="cth: 26 Juni 2002" value="{{ old('birth_date') }}">
+                            <input type="date" class="form-control" id="birth_date" name="birth_date" placeholder="cth: 26 Juni 2002" value="{{ old('birth_date') }}">
                         </div>
 
                         <div class="mb-3">
@@ -49,7 +49,7 @@
                         </div>
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success btn-lg">🎓 Generate Sertifikat</button>
+                            <button type="submit" class="btn btn-success btn-lg">SUBMIT</button>
                         </div>
                     </form>
 
