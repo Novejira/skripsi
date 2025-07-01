@@ -5,7 +5,7 @@
         <div class="col-md-8">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Formulir Pendaftaraan TOEFL BATCH 3 </h4>
+                    <h4 class="mb-0">Formulir Pendaftaraan TOEFL</h4>
                 </div>
                 <div class="card-body">
 
@@ -30,12 +30,12 @@
 
                         <div class="mb-3">
                             <label for="birth_place" class="form-label">Tempat Lahir</label>
-                            <input type="text" class="form-control" id="birth_place" name="birth_place" value="{{ old('birth_place') }}">
+                            <input type="text" class="form-control" id="birth_place" name="birth_place" value="{{ old('birth_place') }}"required>
                         </div>
 
                         <div class="mb-3">
                             <label for="birth_date" class="form-label">Tanggal Lahir</label>
-                            <input type="date" class="form-control" id="birth_date" name="birth_date" placeholder="cth: 26 Juni 2002" value="{{ old('birth_date') }}">
+                            <input type="date" class="form-control" id="birth_date" name="birth_date" placeholder="cth: 26 Juni 2002" value="{{ old('birth_date') }}"required>
                         </div>
 
                         <div class="mb-3">
@@ -45,7 +45,7 @@
 
                         <div class="mb-3">
                             <label for="institution" class="form-label">Asal Institusi</label>
-                            <input type="text" class="form-control" id="institution" name="institution" value="{{ old('institution') }}">
+                            <input type="text" class="form-control" id="institution" name="institution" value="{{ old('institution') }}"required>
                         </div>
 
                         <div class="d-grid gap-2">

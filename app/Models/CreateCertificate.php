@@ -9,5 +9,20 @@ class CreateCertificate extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'file_name','birth_place','birth_date','nim','institution'];
+    protected $fillable = [
+    'name',
+    'file_name',
+    'birth_place',
+    'birth_date',
+    'student_id',
+    'institution',
+    'validity',
+    'test_date',
+    'certificate_number',
+    'listening',
+    'reading',
+    'structure',
+    'score',
+
+];
 }

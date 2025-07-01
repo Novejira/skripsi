@@ -14,11 +14,18 @@ return new class extends Migration
         Schema::create('create_certificates', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('file_name');
+            $table->string('file_name')->nullable();
             $table->string('birth_place')->nullable();
             $table->string('birth_date')->nullable();
-            $table->integer('nim')->nullable();
+            $table->string('student_id')->nullable();
             $table->string('institution')->nullable();
+            $table->integer('listening')->nullable();
+            $table->integer('structure')->nullable();
+            $table->integer('reading')->nullable();
+            $table->string('test_date')->nullable();
+            $table->integer('score')->nullable(); // total
+            $table->string('validity')->nullable();
+            $table->string('certificate_number')->nullable();
 
             $table->timestamps();
         });

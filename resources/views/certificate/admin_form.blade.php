@@ -3,10 +3,8 @@
 @section('content')
 <div class="container">
     <h3>Form Tambahan Admin</h3>
-    <form method="POST" action="{{ route('certificate.final.generate') }}">
+    <form method="POST" action="{{ route('certificate.admin.to-participant-list') }}">
         @csrf
-
-        <p><strong>Peserta:</strong> {{ $participant['participant_name'] }}</p>
 
         <div class="mb-3">
             <label for="test_date" class="form-label">Tanggal Tes</label>
@@ -24,7 +22,7 @@
         </div>
 
         <div class="d-grid">
-            <button class="btn btn-primary btn-lg">Generate Sertifikat</button>
+            <button class="btn btn-primary btn-lg">SUBMIT</button>
         </div>
     </form>
 </div>

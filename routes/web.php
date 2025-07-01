@@ -37,4 +37,13 @@ Route::post('/certificate/to-admin', function(Request $request) {
 })->name('certificate.to-admin');
 
 Route::get('/certificate/admin-form', [CertificateController::class, 'showAdminForm'])->name('certificate.admin.form');
-Route::post('/certificate/final-generate', [CertificateController::class, 'finalGenerate'])->name('certificate.final.generate');
+//Route::post('/certificate/final-generate', [CertificateController::class, 'finalGenerate'])->name('certificate.final.generate');
+
+Route::post('/certificate/admin-to-list', [CertificateController::class, 'storeAdminAndRedirect'])->name('certificate.admin.to-participant-list');
+
+Route::delete('/certificate/participants/{id}', [CertificateController::class, 'deleteParticipant'])->name('certificate.delete');
+
+Route::get('/certificate/participants', [CertificateController::class, 'listParticipants'])->name('certificate.participants');
+Route::get('/certificate/participants/{id}/score', [CertificateController::class, 'showScoreForm'])->name('certificate.score.form');
+
+Route::post('/certificate/participants/{id}/score', [CertificateController::class, 'storeScoreAndGenerate'])->name('certificate.score.store');
