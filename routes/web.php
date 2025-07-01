@@ -23,18 +23,32 @@ Route::get('/certificate/download-pdf/{id}', [CertificateController::class, 'dow
 
 
 Route::post('/certificate/to-admin', function(Request $request) {
-    // Validasi form awal
+    // Validasi form awal + bukti pembayaran
     $request->validate([
         'participant_name' => 'required|string|min:3|max:255',
         'student_id' => 'required|numeric',
+        'birth_place' => 'required|string',
+        'birth_date' => 'required|date',
+        'institution' => 'required|string',
+        'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048',
     ]);
 
-    $request->session()->put('form_data', $request->only([
-        'participant_name', 'birth_place', 'birth_date', 'student_id', 'institution'
-    ]));
+    // Simpan gambar ke storage
+    $paymentProofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
+
+    // Simpan semua ke session (termasuk path bukti pembayaran)
+    $request->session()->put('form_data', [
+        'participant_name' => $request->input('participant_name'),
+        'birth_place' => $request->input('birth_place'),
+        'birth_date' => $request->input('birth_date'),
+        'student_id' => $request->input('student_id'),
+        'institution' => $request->input('institution'),
+        'payment_proof' => $paymentProofPath, // <== ini penting
+    ]);
 
     return redirect()->route('certificate.admin.form');
 })->name('certificate.to-admin');
+
 
 Route::get('/certificate/admin-form', [CertificateController::class, 'showAdminForm'])->name('certificate.admin.form');
 //Route::post('/certificate/final-generate', [CertificateController::class, 'finalGenerate'])->name('certificate.final.generate');

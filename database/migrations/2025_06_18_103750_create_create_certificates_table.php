@@ -26,6 +26,7 @@ return new class extends Migration
             $table->integer('score')->nullable(); // total
             $table->string('validity')->nullable();
             $table->string('certificate_number')->nullable();
+            $table->string('payment_proof')->nullable();
 
             $table->timestamps();
         });

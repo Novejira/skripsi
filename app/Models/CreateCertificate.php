@@ -23,6 +23,7 @@ class CreateCertificate extends Model
     'reading',
     'structure',
     'score',
+    'payment_proof',
 
 ];
 }

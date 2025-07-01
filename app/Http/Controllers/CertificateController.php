@@ -35,6 +35,7 @@ class CertificateController extends Controller
             'test_date' => 'required|date',
             'validity' => 'required|string|max:255',
             'certificate_number' => 'required|string|max:255',
+
         ]);
 
         $participant = $request->session()->get('form_data');

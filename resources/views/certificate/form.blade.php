@@ -20,7 +20,7 @@
                         </div>
                     @endif
 
-                        <form action="{{ route('certificate.to-admin') }}" method="POST">
+                        <form action="{{ route('certificate.to-admin') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
                         <div class="mb-3">
@@ -47,6 +47,22 @@
                             <label for="institution" class="form-label">Asal Institusi</label>
                             <input type="text" class="form-control" id="institution" name="institution" value="{{ old('institution') }}"required>
                         </div>
+
+                        <div class="mb-3">
+                            <label for="payment_proof" class="form-label">Bukti Pembayaran (JPG/PNG)</label>
+                            <input type="file" class="form-control" id="payment_proof" name="payment_proof" accept="image/*" required>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <strong>Rekening Resmi Pembayaran TOEFL:</strong><br>
+                            BNI<br>
+                            YAYASAN JAKARTA GLOBAL EDUCARE CEDEC<br>
+                            <strong>3355300077</strong><br><br>
+
+                            <strong>Biaya:</strong> TOEFL Rp300.000<br>
+                            <em>Dihimbau untuk tidak melakukan transaksi melalui rekening pribadi siapapun selain rekening resmi kampus.</em>
+                        </div>
+
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-success btn-lg">SUBMIT</button>
