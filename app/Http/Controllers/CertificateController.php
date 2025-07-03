@@ -29,13 +29,12 @@ class CertificateController extends Controller
         return view('certificate.admin_form', ['participant' => $data]);
     }
 
-    public function storeAdminAndRedirect(Request $request)
+        public function storeAdminAndRedirect(Request $request)
     {
         $request->validate([
             'test_date' => 'required|date',
             'validity' => 'required|string|max:255',
-            'certificate_number' => 'required|string|max:255',
-
+            // 'certificate_number' dihapus karena akan digenerate otomatis
         ]);
 
         $participant = $request->session()->get('form_data');
@@ -43,7 +42,13 @@ class CertificateController extends Controller
             return redirect()->route('certificate.form')->withErrors(['Data peserta tidak ditemukan.']);
         }
 
-        $data = array_merge($participant, $request->only(['test_date', 'validity', 'certificate_number']));
+        // Hitung urutan berdasarkan CreateCertificate
+        $order = CreateCertificate::count() + 1;
+        $formattedOrder = str_pad($order, 3, '0', STR_PAD_LEFT);
+        $certNumber = "$formattedOrder/Sert/TOEFL/03/CEdEC/2025";
+
+        $data = array_merge($participant, $request->only(['test_date', 'validity']));
+        $data['certificate_number'] = $certNumber; // generate otomatis
 
         $data['name'] = $data['participant_name'];
         unset($data['participant_name']);
@@ -54,9 +59,10 @@ class CertificateController extends Controller
         return redirect()->route('certificate.participants')->with('success', 'Data peserta berhasil disimpan. Silakan input skor.');
     }
 
+
     public function listParticipants()
     {
-        $participants = CreateCertificate::orderBy('created_at', 'desc')->get();
+        $participants = CreateCertificate::orderBy('created_at', 'asc')->get();
         return view('certificate.participant_list', compact('participants'));
     }
 
@@ -93,7 +99,7 @@ class CertificateController extends Controller
         $img->text(strtoupper($participant->birth_date), 122, 850, fn($f) => $this->applyFont($f, $fontPath));
         $img->text(strtoupper($participant->student_id), 122, 945, fn($f) => $this->applyFont($f, $fontPath));
         $img->text(strtoupper($participant->institution), 720, 655, fn($f) => $this->applyFont($f, $fontPath));
-        $img->text(strtoupper($participant->certificate_number), 720, 940, fn($f) => $this->applyFont($f, $fontPath));
+        $img->text($participant->certificate_number, 720, 940, fn($f) => $this->applyFont($f, $fontPath));
         $img->text(Carbon::parse($participant->test_date)->format('d/m/Y'), 720, 745, fn($f) => $this->applyFont($f, $fontPath));
         $img->text(strtoupper($participant->validity), 720, 845, fn($f) => $this->applyFont($f, $fontPath));
 
@@ -169,4 +175,24 @@ class CertificateController extends Controller
         $font->align($align);
         $font->valign('top');
     }
+
+        public function store(Request $request)
+    {
+        // hitung jumlah pendaftar sebelumnya
+        $order = Certificate::count() + 1;
+
+        // buat format nomor sertifikat
+        $formattedOrder = str_pad($order, 3, '0', STR_PAD_LEFT); // jadi 001, 002, dst
+        $certNumber = "$formattedOrder/Sert/TOEFL/03/CEdEC/2025";
+
+        Certificate::create([
+            'user_id' => auth()->id(),
+            'order_number' => $order,
+            'certificate_number' => $certNumber,
+            // data lain
+        ]);
+
+        return redirect()->route('admin.form'); // atau step berikutnya
+    }
+
 }

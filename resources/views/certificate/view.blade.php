@@ -26,8 +26,9 @@
             <p><strong>Listening Comprehension:</strong> {{ $certificate->listening }}</p>
             <p><strong>Structure & Written Expression:</strong> {{ $certificate->structure }}</p>
             <p><strong>Reading Comprehension:</strong> {{ $certificate->reading }}</p>
+            <p><strong>Total Score:</strong> {{ $certificate->score }}</p>
+
         </div>
     </div>
-    <h3 class="text-center mt-4">Total Score: {{ $certificate->score }}</h3>
 </body>
 </html>

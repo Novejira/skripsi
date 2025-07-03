@@ -16,11 +16,6 @@
             <input type="text" class="form-control" name="validity" required placeholder="cth: 1 Tahun">
         </div>
 
-        <div class="mb-3">
-            <label for="certificate_number" class="form-label">Nomor Sertifikat</label>
-            <input type="text" class="form-control" name="certificate_number" required>
-        </div>
-
         <div class="d-grid">
             <button class="btn btn-primary btn-lg">SUBMIT</button>
         </div>

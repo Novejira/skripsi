@@ -27,6 +27,7 @@ return new class extends Migration
             $table->string('validity')->nullable();
             $table->string('certificate_number')->nullable();
             $table->string('payment_proof')->nullable();
+            $table->integer('order_number')->nullable(); // nomor urut pendaftar
 
             $table->timestamps();
         });

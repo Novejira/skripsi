@@ -24,6 +24,6 @@ class CreateCertificate extends Model
     'structure',
     'score',
     'payment_proof',
-
+    'order_number',
 ];
 }

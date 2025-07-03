@@ -65,7 +65,7 @@
 
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success btn-lg">SUBMIT</button>
+                            <button type="submit" class="btn btn-success btn-lg">DAFTAR</button>
                         </div>
                     </form>
 
