@@ -44,8 +44,13 @@
                 </td>
 
                 <td>
-                    <a href="{{ route('certificate.score.form', $participant->id) }}">Input Skor</a>
-                    |
+                    @if ($participant->score !== null)
+                        <span style="color: green; font-weight: bold;">Done</span>
+                    @else
+                        <a href="{{ route('certificate.score.form', $participant->id) }}">Input Skor</a>
+                    @endif
+
+
                     <form action="{{ route('certificate.delete', $participant->id) }}" method="POST" style="display:inline" onsubmit="return confirm('Yakin mau hapus data ini?')">
                         @csrf
                         @method('DELETE')
