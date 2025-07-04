@@ -25,5 +25,8 @@ class CreateCertificate extends Model
     'score',
     'payment_proof',
     'order_number',
+    'encrypted_name',
+    'data_hash',
+
 ];
 }

@@ -28,6 +28,8 @@ return new class extends Migration
             $table->string('certificate_number')->nullable();
             $table->string('payment_proof')->nullable();
             $table->integer('order_number')->nullable(); // nomor urut pendaftar
+            $table->text('encrypted_name')->nullable();
+            $table->string('data_hash')->nullable();
 
             $table->timestamps();
         });

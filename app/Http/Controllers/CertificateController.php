@@ -13,6 +13,8 @@ use SimpleSoftwareIO\QrCode\Generator;
 use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use App\Helpers\SecurityHelper;
+
 
 class CertificateController extends Controller
 {
@@ -119,12 +121,35 @@ class CertificateController extends Controller
         $img->place($qrImage, 'bottom-left', 250, 200);
         $img->save($outputPath);
 
+                // 🔐 Enkripsi nama peserta
+        $encryptedName = SecurityHelper::encryptAES($participant->name);
+
+        // 🔐 Buat hash dari data penting untuk verifikasi integritas
+        $dataHash = SecurityHelper::createSHA256Hash([
+            $encryptedName,
+            $participant->birth_place,
+            $participant->birth_date,
+            $participant->student_id,
+            $participant->institution,
+            $participant->certificate_number,
+            $participant->test_date,
+            $participant->validity,
+            $request->listening,
+            $request->structure,
+            $request->reading,
+            $totalScore,
+        ]);
+
+
         $participant->update([
             'listening' => $request->listening,
             'structure' => $request->structure,
             'reading' => $request->reading,
             'score' => $totalScore,
             'file_name' => $fileName,
+            'encrypted_name' => $encryptedName,
+            'data_hash' => $dataHash,
+
         ]);
 
         return view('certificate.display_image', [
@@ -133,10 +158,43 @@ class CertificateController extends Controller
         ]);
     }
 
-    public function view($id)
+        public function view($id)
     {
         $certificate = CreateCertificate::findOrFail($id);
-        return view('certificate.view', compact('certificate'));
+
+        // ✅ Rekalkulasi ulang hash
+        $recalculatedHash = SecurityHelper::createSHA256Hash([
+            $certificate->encrypted_name,
+            $certificate->birth_place,
+            $certificate->birth_date,
+            $certificate->student_id,
+            $certificate->institution,
+            $certificate->certificate_number,
+            $certificate->test_date,
+            $certificate->validity,
+            $certificate->listening,
+            $certificate->structure,
+            $certificate->reading,
+            $certificate->score,
+        ]);
+
+        // 🔒 Bandingkan hash
+        if ($recalculatedHash === $certificate->data_hash) {
+            // ✅ Data masih asli — tampilkan nama hasil dekripsi
+            $decryptedName = SecurityHelper::decryptAES($certificate->encrypted_name);
+
+            return view('certificate.view', [
+                'certificate' => $certificate,
+                'decrypted_name' => $decryptedName,
+                'valid' => true,
+            ]);
+        } else {
+            // ❌ Data tidak valid — hash tidak cocok
+            return view('certificate.view', [
+                'certificate' => $certificate,
+                'valid' => false,
+            ]);
+        }
     }
 
     public function downloadPdf($id)
