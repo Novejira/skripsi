@@ -17,6 +17,7 @@
         <div class="alert alert-success">
             Sertifikat ini <strong>valid</strong> ✅
         </div>
+
     @else
         <div class="alert alert-danger">
             Sertifikat ini <strong>tidak valid</strong> ❌ — data kemungkinan telah diubah atau rusak.
@@ -33,7 +34,7 @@
             </p>
 
             <p><strong>Nama Kegiatan:</strong> TOEFL Prediction Test</p>
-            <p><strong>Tanggal Tes:</strong> {{ $certificate->test_date }}</p>
+            <p><strong>Tanggal Tes:</strong> {{ \Carbon\Carbon::parse($certificate->test_date)->format('d/m/Y') }}</p>
             <p><strong>Validitas:</strong> {{ $certificate->validity }}</p>
         </div>
     </div>
@@ -50,6 +51,15 @@
         </div>
     </div>
     @endif
+
+     <div class="mt-4 p-4 bg-success bg-opacity-10 border border-success rounded shadow-sm text-center">
+            <h2 class="text-success fw-bold mb-1">
+                CEdEC Verified
+            </h2>
+            <p class="text-muted mb-0">
+                Sertifikat ini telah diverifikasi dan dinyatakan valid oleh sistem CEdEC.
+            </p>
+        </div>
 
 </body>
 </html>

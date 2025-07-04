@@ -61,3 +61,5 @@ Route::get('/certificate/participants', [CertificateController::class, 'listPart
 Route::get('/certificate/participants/{id}/score', [CertificateController::class, 'showScoreForm'])->name('certificate.score.form');
 
 Route::post('/certificate/participants/{id}/score', [CertificateController::class, 'storeScoreAndGenerate'])->name('certificate.score.store');
+
+Route::get('/admin/qr-scan-logs', [CertificateController::class, 'scanLogs'])->name('admin.qr_scan_logs');

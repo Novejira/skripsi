@@ -14,6 +14,8 @@ use Illuminate\Support\Str;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use App\Helpers\SecurityHelper;
+use App\Models\QrScanLog;
+
 
 
 class CertificateController extends Controller
@@ -178,9 +180,18 @@ class CertificateController extends Controller
             $certificate->score,
         ]);
 
-        // 🔒 Bandingkan hash
-        if ($recalculatedHash === $certificate->data_hash) {
-            // ✅ Data masih asli — tampilkan nama hasil dekripsi
+
+        $isValid = $recalculatedHash === $certificate->data_hash;
+
+        // 📝 Simpan log scan
+        QrScanLog::create([
+            'certificate_id' => $certificate->id,
+            'ip_address' => request()->ip(),
+            'user_agent' => request()->header('User-Agent'),
+            'is_valid' => $isValid,
+        ]);
+
+        if ($isValid) {
             $decryptedName = SecurityHelper::decryptAES($certificate->encrypted_name);
 
             return view('certificate.view', [
@@ -189,7 +200,6 @@ class CertificateController extends Controller
                 'valid' => true,
             ]);
         } else {
-            // ❌ Data tidak valid — hash tidak cocok
             return view('certificate.view', [
                 'certificate' => $certificate,
                 'valid' => false,
@@ -251,6 +261,12 @@ class CertificateController extends Controller
         ]);
 
         return redirect()->route('admin.form'); // atau step berikutnya
+    }
+
+        public function scanLogs()
+    {
+        $logs = QrScanLog::with('certificate')->latest()->paginate(10);
+        return view('admin.qr_scan_logs', compact('logs'));
     }
 
 }
