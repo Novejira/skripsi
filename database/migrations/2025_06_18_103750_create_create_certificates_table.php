@@ -20,7 +20,8 @@ return new class extends Migration
             $table->string('student_id')->nullable();
             $table->string('institution')->nullable();
             $table->integer('listening')->nullable();
-            $table->integer('structure')->nullable();
+            $table->integer('toefl')->nullable();
+            $table->integer('toeic')->nullable();
             $table->integer('reading')->nullable();
             $table->string('test_date')->nullable();
             $table->integer('score')->nullable(); // total

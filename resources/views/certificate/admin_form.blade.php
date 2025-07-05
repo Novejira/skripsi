@@ -13,7 +13,7 @@
 
         <div class="mb-3">
             <label for="validity" class="form-label">Validitas Sertifikat</label>
-            <input type="text" class="form-control" name="validity" required placeholder="cth: 1 Tahun">
+            <input type="date" class="form-control" id="validity" name="validity" placeholder="cth: 26 Juni 2002" value="{{ old('validity') }}"required>
         </div>
 
         <div class="d-grid">
