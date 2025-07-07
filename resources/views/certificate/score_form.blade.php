@@ -3,7 +3,7 @@
 @section('content')
 <div class="container">
     <h3>Input Skor TOEFL untuk: {{ $participant->name }}</h3>
-    <form method="POST" action="{{ route('certificate.score.store', $participant->id) }}">
+    <form method="POST" action="{{ route('certificate.score.store', $participant->uuid) }}">
         @csrf
 
         <div class="mb-3">

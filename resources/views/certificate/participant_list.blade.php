@@ -3,7 +3,7 @@
 @section('content')
 <div class="container">
     <h2>Daftar Peserta</h2>
-    <input type="text" id="searchInput" class="form-control mb-3" placeholder="Cari nama atau institusi...">
+    <input type="text" uuid="searchInput" class="form-control mb-3" placeholder="Cari nama atau institusi...">
     <table class="table table-bordered table-striped align-middle text-center table-thick-border">
         <thead>
             <tr>
@@ -24,12 +24,12 @@
                 <td>{{ $participant->institution }}</td>
                 <td>
                     @if($participant->payment_proof)
-                        <a href="#" data-bs-toggle="modal" data-bs-target="#modal-{{ $participant->id }}">
+                        <a href="#" data-bs-toggle="modal" data-bs-target="#modal-{{ $participant->uuid }}">
                             <img src="{{ asset('storage/' . $participant->payment_proof) }}" alt="Bukti" width="100">
                         </a>
 
                         <!-- Modal -->
-                        <div class="modal fade" id="modal-{{ $participant->id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal fade" id="modal-{{ $participant->uuid }}" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-dialog-centered modal-lg">
                             <div class="modal-content">
                             <div class="modal-body text-center">
@@ -47,11 +47,11 @@
                     @if ($participant->score !== null)
                         <span style="color: green; font-weight: bold;">Done</span>
                     @else
-                        <a href="{{ route('certificate.score.form', $participant->id) }}">Input Skor</a>
+                        <a href="{{ route('certificate.score.form', $participant->uuid) }}">Input Skor</a>
                     @endif
 
 
-                    <form action="{{ route('certificate.delete', $participant->id) }}" method="POST" style="display:inline" onsubmit="return confirm('Yakin mau hapus data ini?')">
+                    <form action="{{ route('certificate.delete', $participant->uuid) }}" method="POST" style="display:inline" onsubmit="return confirm('Yakin mau hapus data ini?')">
                         @csrf
                         @method('DELETE')
                         <button type="submit" style="color:red; background:none; border:none; padding:0;">Hapus</button>

@@ -15,6 +15,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use App\Helpers\SecurityHelper;
 use App\Models\QrScanLog;
+use Illuminate\Support\Facades\URL;
 
 
 
@@ -70,13 +71,13 @@ class CertificateController extends Controller
         return view('certificate.participant_list', compact('participants'));
     }
 
-    public function showScoreForm($id)
+    public function showScoreForm($uuid)
     {
-        $participant = CreateCertificate::findOrFail($id);
+        $participant = CreateCertificate::findOrFail($uuid);
         return view('certificate.score_form', compact('participant'));
     }
 
-    public function storeScoreAndGenerate(Request $request, $id, Generator $qr)
+    public function storeScoreAndGenerate(Request $request, $uuid, Generator $qr)
     {
         $request->validate([
             'listening' => 'required|numeric|min:0|max:500',
@@ -87,7 +88,7 @@ class CertificateController extends Controller
 
         $totalScore = $request->listening + $request->reading;
 
-        $participant = CreateCertificate::findOrFail($id);
+        $participant = CreateCertificate::findOrFail($uuid);
 
         $imageManager = new ImageManager(new GdDriver());
         $templatePath = public_path('certificates/certificate_template.png');
@@ -118,8 +119,9 @@ class CertificateController extends Controller
         $outputPath = public_path('generated_certificates/' . $fileName);
         if (!file_exists(dirname($outputPath))) mkdir(dirname($outputPath), 0777, true);
 
-        $url = route('certificate.view', ['id' => $participant->id]);
-        $qrPath = public_path('generated_certificates/qr_' . $participant->id . '.png');
+        $url = URL::signedRoute('certificate.view', ['uuid' => $participant->uuid]);
+
+        $qrPath = public_path('generated_certificates/qr_' . $participant->uuid . '.png');
         file_put_contents($qrPath, $qr->format('png')->size(200)->generate($url));
         $qrImage = $imageManager->read($qrPath);
         $img->place($qrImage, 'bottom-left', 740, 600);
@@ -164,9 +166,12 @@ class CertificateController extends Controller
         ]);
     }
 
-        public function view($id)
+        public function view($uuid, Request $request)
     {
-        $certificate = CreateCertificate::findOrFail($id);
+         if (!$request->hasValidSignature()) {
+        abort(403, 'Link tidak valid atau sudah kedaluwarsa.');
+    }
+        $certificate = CreateCertificate::where('uuid', $uuid)->firstOrFail();
 
         // ✅ Rekalkulasi ulang hash
         $recalculatedHash = SecurityHelper::createSHA256Hash([
@@ -190,7 +195,7 @@ class CertificateController extends Controller
 
         // 📝 Simpan log scan
         QrScanLog::create([
-            'certificate_id' => $certificate->id,
+            'certificate_id' => $certificate->uuid,
             'ip_address' => request()->ip(),
             'user_agent' => request()->header('User-Agent'),
             'is_valid' => $isValid,
@@ -212,9 +217,9 @@ class CertificateController extends Controller
         }
     }
 
-    public function downloadPdf($id)
+    public function downloadPdf($uuid)
     {
-        $certificate = CreateCertificate::findOrFail($id);
+        $certificate = CreateCertificate::findOrFail($uuid);
         $imagePath = public_path('generated_certificates/' . $certificate->file_name);
         if (!file_exists($imagePath)) abort(404, 'File sertifikat tidak ditemukan');
 
@@ -226,9 +231,9 @@ class CertificateController extends Controller
         return $pdf->download('sertifikat_' . Str::slug($certificate->name) . '.pdf');
     }
 
-    public function deleteParticipant($id)
+    public function deleteParticipant($uuid)
     {
-        $participant = CreateCertificate::findOrFail($id);
+        $participant = CreateCertificate::findOrFail($uuid);
         $filePath = public_path('generated_certificates/' . $participant->file_name);
         if (file_exists($filePath)) unlink($filePath);
 

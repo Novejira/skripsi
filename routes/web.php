@@ -18,8 +18,8 @@ use Illuminate\Http\Request;
 
 Route::get('/', [CertificateController::class, 'showForm'])->name('certificate.form');
 Route::post('/certificate/generate', [CertificateController::class, 'generate'])->name('certificate.generate');
-Route::get('/certificate/view/{id}', [CertificateController::class, 'view'])->name('certificate.view');
-Route::get('/certificate/download-pdf/{id}', [CertificateController::class, 'downloadPdf'])->name('certificate.download.pdf');
+Route::get('/certificate/view/{uuid}', [CertificateController::class, 'view'])->name('certificate.view');
+Route::get('/certificate/download-pdf/{uuid}', [CertificateController::class, 'downloadPdf'])->name('certificate.download.pdf');
 
 
 Route::post('/certificate/to-admin', function(Request $request) {
@@ -55,11 +55,11 @@ Route::get('/certificate/admin-form', [CertificateController::class, 'showAdminF
 
 Route::post('/certificate/admin-to-list', [CertificateController::class, 'storeAdminAndRedirect'])->name('certificate.admin.to-participant-list');
 
-Route::delete('/certificate/participants/{id}', [CertificateController::class, 'deleteParticipant'])->name('certificate.delete');
+Route::delete('/certificate/participants/{uuid}', [CertificateController::class, 'deleteParticipant'])->name('certificate.delete');
 
 Route::get('/certificate/participants', [CertificateController::class, 'listParticipants'])->name('certificate.participants');
-Route::get('/certificate/participants/{id}/score', [CertificateController::class, 'showScoreForm'])->name('certificate.score.form');
+Route::get('/certificate/participants/{uuid}/score', [CertificateController::class, 'showScoreForm'])->name('certificate.score.form');
 
-Route::post('/certificate/participants/{id}/score', [CertificateController::class, 'storeScoreAndGenerate'])->name('certificate.score.store');
+Route::post('/certificate/participants/{uuid}/score', [CertificateController::class, 'storeScoreAndGenerate'])->name('certificate.score.store');
 
 Route::get('/admin/qr-scan-logs', [CertificateController::class, 'scanLogs'])->name('admin.qr_scan_logs');

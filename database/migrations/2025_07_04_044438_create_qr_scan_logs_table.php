@@ -6,14 +6,15 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('qr_scan_logs', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('certificate_id')->constrained('create_certificates')->onDelete('cascade');
+            $table->uuid('certificate_id'); // ✅ gunakan UUID
+            $table->foreign('certificate_id')
+                  ->references('uuid')
+                  ->on('create_certificates')
+                  ->onDelete('cascade');
+
             $table->timestamp('scanned_at')->useCurrent();
             $table->string('ip_address')->nullable();
             $table->text('user_agent')->nullable();
@@ -23,9 +24,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('qr_scan_logs');
