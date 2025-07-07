@@ -26,6 +26,53 @@ class CertificateController extends Controller
         return view('certificate.form');
     }
 
+        public function storePendaftaran(Request $request)
+    {
+        $request->validate([
+            'participant_name' => 'required|string|min:3|max:255',
+            'student_id' => 'required|numeric',
+            'birth_place' => 'required|string',
+            'birth_date' => 'required|date',
+            'institution' => 'required|string',
+            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        // Simpan bukti pembayaran ke storage
+        $paymentProofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
+
+        // Simpan ke database
+        $certificate = CreateCertificate::create([
+            'uuid' => Str::uuid(),
+            'name' => $request->participant_name,
+            'student_id' => $request->student_id,
+            'birth_place' => $request->birth_place,
+            'birth_date' => $request->birth_date,
+            'institution' => $request->institution,
+            'payment_proof' => $paymentProofPath,
+        ]);
+
+        // Redirect ke form admin dengan membawa UUID peserta tersebut
+        return redirect()->route('certificate.participants')->with('success', 'Pendaftaran berhasil!');
+    }
+
+        public function storeGlobalSettings(Request $request)
+    {
+        $request->validate([
+            'test_date' => 'required|date',
+            'validity' => 'required|date',
+        ]);
+
+        // Update semua peserta yang belum memiliki tanggal tes / validitas
+        CreateCertificate::whereNull('test_date')
+            ->orWhereNull('validity')
+            ->update([
+                'test_date' => $request->test_date,
+                'validity' => $request->validity,
+            ]);
+
+        return redirect()->route('certificate.participants')->with('success', 'Tanggal tes & validitas berhasil diterapkan.');
+    }
+
     public function showAdminForm(Request $request)
     {
         $data = $request->session()->get('form_data');
@@ -100,6 +147,14 @@ class CertificateController extends Controller
         $fontPath = public_path('fonts/OpenSans-Regular.ttf');
         if (!file_exists($fontPath)) $fontPath = null;
 
+        $order = CreateCertificate::where('created_at', '<=', $participant->created_at)->count();
+        $formattedOrder = str_pad($order, 3, '0', STR_PAD_LEFT);
+        $certificateNumber = "$formattedOrder/Sert/TOEFL/03/CEdEC/2025";
+
+        if (!$participant->certificate_number) {
+            $participant->certificate_number = $certificateNumber;
+        }
+
         $img->text(strtoupper($participant->name), 122, 580, fn($f) => $this->applyFont($f, $fontPath));
         $img->text(strtoupper($participant->birth_place), 122, 675, fn($f) => $this->applyFont($f, $fontPath));
         $img->text(Carbon::parse($participant->birth_date)->format('d/m/Y'), 122, 775, fn($f) => $this->applyFont($f, $fontPath));
@@ -149,6 +204,7 @@ class CertificateController extends Controller
 
 
         $participant->update([
+            'certificate_number' => $participant->certificate_number,
             'listening' => $request->listening,
             'toefl' => $request->toefl,
             'toeic' => $request->toeic,

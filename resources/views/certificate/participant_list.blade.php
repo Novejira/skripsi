@@ -3,6 +3,30 @@
 @section('content')
 <div class="container">
     <h2>Daftar Peserta</h2>
+
+    {{-- FORM ADMIN: Tanggal Tes & Validitas --}}
+    <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Pengaturan Tes TOEFL</h5>
+            <form method="POST" action="{{ route('certificate.participants.settings') }}">
+                @csrf
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="test_date" class="form-label">Tanggal Tes</label>
+                        <input type="date" class="form-control" name="test_date" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="validity" class="form-label">Masa Berlaku Sertifikat</label>
+                        <input type="date" class="form-control" name="validity" required>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary">Simpan Pengaturan untuk Semua Peserta</button>
+            </form>
+        </div>
+    </div>
+
     <input type="text" uuid="searchInput" class="form-control mb-3" placeholder="Cari nama atau institusi...">
     <table class="table table-bordered table-striped align-middle text-center table-thick-border">
         <thead>

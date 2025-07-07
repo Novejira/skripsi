@@ -22,38 +22,14 @@ Route::get('/certificate/view/{uuid}', [CertificateController::class, 'view'])->
 Route::get('/certificate/download-pdf/{uuid}', [CertificateController::class, 'downloadPdf'])->name('certificate.download.pdf');
 
 
-Route::post('/certificate/to-admin', function(Request $request) {
-    // Validasi form awal + bukti pembayaran
-    $request->validate([
-        'participant_name' => 'required|string|min:3|max:255',
-        'student_id' => 'required|numeric',
-        'birth_place' => 'required|string',
-        'birth_date' => 'required|date',
-        'institution' => 'required|string',
-        'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048',
-    ]);
-
-    // Simpan gambar ke storage
-    $paymentProofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
-
-    // Simpan semua ke session (termasuk path bukti pembayaran)
-    $request->session()->put('form_data', [
-        'participant_name' => $request->input('participant_name'),
-        'birth_place' => $request->input('birth_place'),
-        'birth_date' => $request->input('birth_date'),
-        'student_id' => $request->input('student_id'),
-        'institution' => $request->input('institution'),
-        'payment_proof' => $paymentProofPath, // <== ini penting
-    ]);
-
-    return redirect()->route('certificate.admin.form');
-})->name('certificate.to-admin');
+Route::post('/certificate/to-admin', [CertificateController::class, 'storePendaftaran'])->name('certificate.to-admin');
 
 
-Route::get('/certificate/admin-form', [CertificateController::class, 'showAdminForm'])->name('certificate.admin.form');
+Route::get('/certificate/admin-form/{uuid}', [CertificateController::class, 'showAdminForm'])->name('certificate.admin.form');
+
 //Route::post('/certificate/final-generate', [CertificateController::class, 'finalGenerate'])->name('certificate.final.generate');
 
-Route::post('/certificate/admin-to-list', [CertificateController::class, 'storeAdminAndRedirect'])->name('certificate.admin.to-participant-list');
+Route::post('/certificate/participants/settings', [CertificateController::class, 'storeGlobalSettings'])->name('certificate.participants.settings');
 
 Route::delete('/certificate/participants/{uuid}', [CertificateController::class, 'deleteParticipant'])->name('certificate.delete');
 
