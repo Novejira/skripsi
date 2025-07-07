@@ -34,7 +34,7 @@ class CertificateController extends Controller
             'birth_place' => 'required|string',
             'birth_date' => 'required|date',
             'institution' => 'required|string',
-            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:1000',
         ]);
 
         // Simpan bukti pembayaran ke storage
