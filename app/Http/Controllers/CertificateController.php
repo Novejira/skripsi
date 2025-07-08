@@ -28,33 +28,43 @@ class CertificateController extends Controller
 
         public function storePendaftaran(Request $request)
     {
-        $request->validate([
-            'participant_name' => 'required|string|min:3|max:255',
-            'student_id' => 'required|numeric',
-            'birth_place' => 'required|string',
-            'birth_date' => 'required|date',
-            'institution' => 'required|string',
-            'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:1000',
-        ]);
+            Log::info('Menerima request pendaftaran: ', $request->all()); // Log input
+    try {
+            $request->validate([
+                'name' => 'required|string|min:3|max:255',
+                'student_id' => 'required|numeric',
+                'birth_place' => 'required|string',
+                'birth_date' => 'required|date',
+                'institution' => 'required|string',
+                'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:1000',
+            ]);
 
-        // Simpan bukti pembayaran ke storage
-        $paymentProofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
+            Log::info('Validasi berhasil.');
 
-        // Simpan ke database
-        $certificate = CreateCertificate::create([
-            'uuid' => Str::uuid(),
-            'name' => $request->participant_name,
-            'student_id' => $request->student_id,
-            'birth_place' => $request->birth_place,
-            'birth_date' => $request->birth_date,
-            'institution' => $request->institution,
-            'payment_proof' => $paymentProofPath,
-        ]);
+            $paymentProofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
+            Log::info('Bukti pembayaran disimpan di: ' . $paymentProofPath);
 
-        // Redirect ke form admin dengan membawa UUID peserta tersebut
-        return redirect()->route('certificate.participants')->with('success', 'Pendaftaran berhasil!');
+            $certificate = CreateCertificate::create([
+                'uuid' => Str::uuid(),
+                'name' => $request->name,
+                'student_id' => $request->student_id,
+                'birth_place' => $request->birth_place,
+                'birth_date' => $request->birth_date,
+                'institution' => $request->institution,
+                'payment_proof' => $paymentProofPath,
+            ]);
+
+            Log::info('Data peserta berhasil disimpan di database. UUID: ' . $certificate->uuid);
+
+            return redirect()->route('certificate.participants')->with('success', 'Pendaftaran berhasil!');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validasi gagal: ' . json_encode($e->errors()));
+            return back()->withInput()->withErrors($e->errors());
+        } catch (\Exception $e) {
+            Log::error('Terjadi error saat pendaftaran: ' . $e->getMessage() . ' pada baris ' . $e->getLine() . ' di file ' . $e->getFile());
+            return back()->withInput()->withErrors(['gagal' => 'Terjadi kesalahan server saat pendaftaran. Silakan coba lagi.']);
+        }
     }
-
         public function storeGlobalSettings(Request $request)
     {
         $request->validate([
