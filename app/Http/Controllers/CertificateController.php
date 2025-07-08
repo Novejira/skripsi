@@ -42,7 +42,8 @@ class CertificateController extends Controller
 
         // Simpan ke database
         $certificate = CreateCertificate::create([
-//          'participant_name' => $request->participant_name,
+            'uuid' => Str::uuid(),
+            'participant_name' => $request->participant_name,
             'student_id' => $request->student_id,
             'birth_place' => $request->birth_place,
             'birth_date' => $request->birth_date,
@@ -154,7 +155,7 @@ class CertificateController extends Controller
             $participant->certificate_number = $certificateNumber;
         }
 
-        $img->text(strtoupper($participant->name), 122, 580, fn($f) => $this->applyFont($f, $fontPath));
+        $img->text(strtoupper($participant->participant_name), 122, 580, fn($f) => $this->applyFont($f, $fontPath));
         $img->text(strtoupper($participant->birth_place), 122, 675, fn($f) => $this->applyFont($f, $fontPath));
         $img->text(Carbon::parse($participant->birth_date)->format('d/m/Y'), 122, 775, fn($f) => $this->applyFont($f, $fontPath));
         $img->text(strtoupper($participant->student_id), 122, 870, fn($f) => $this->applyFont($f, $fontPath));
@@ -182,7 +183,7 @@ class CertificateController extends Controller
         $img->save($outputPath);
 
                 // 🔐 Enkripsi nama peserta
-        $encryptedName = SecurityHelper::encryptAES($participant->name);
+        $encryptedName = SecurityHelper::encryptAES($participant->participant_name);
 
         // 🔐 Buat hash dari data penting untuk verifikasi integritas
         $dataHash = SecurityHelper::createSHA256Hash([

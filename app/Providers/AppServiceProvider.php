@@ -21,15 +21,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (app()->environment('production')) {
-            // Paksa HTTPS jika di production
-            URL::forceScheme('https');
 
-            // Set konfigurasi session agar cookie aman
-            Config::set('session.secure', true);
-            Config::set('session.same_site', 'lax');
-            Config::set('session.domain', '.e-certification-cedec.up.railway.app');
-
-        }
     }
 }
