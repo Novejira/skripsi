@@ -4,7 +4,6 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Config;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,9 +30,6 @@ class AppServiceProvider extends ServiceProvider
             Config::set('session.same_site', 'lax');
             Config::set('session.domain', 'e-certification-cedec.up.railway.app');
 
-            // Clear cache untuk config & route
-            Artisan::call('config:clear');
-            Artisan::call('cache:clear');
         }
     }
 }
