@@ -42,8 +42,7 @@ class CertificateController extends Controller
 
         // Simpan ke database
         $certificate = CreateCertificate::create([
-            'uuid' => Str::uuid(),
-            'participant_name' => $request->participant_name,
+//          'participant_name' => $request->participant_name,
             'student_id' => $request->student_id,
             'birth_place' => $request->birth_place,
             'birth_date' => $request->birth_date,
