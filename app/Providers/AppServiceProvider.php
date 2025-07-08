@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
             // Set konfigurasi session agar cookie aman
             Config::set('session.secure', true);
             Config::set('session.same_site', 'lax');
-            Config::set('session.domain', 'e-certification-cedec.up.railway.app');
+            Config::set('session.domain', '.e-certification-cedec.up.railway.app');
 
         }
     }
