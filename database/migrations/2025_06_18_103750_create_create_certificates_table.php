@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('create_certificates', function (Blueprint $table) {
             $table->uuid('uuid')->primary(); // ✅ UUID sebagai primary key
-            $table->string('name');
+            $table->string('participant_name');
             $table->string('file_name')->nullable();
             $table->string('birth_place')->nullable();
             $table->string('birth_date')->nullable();
@@ -28,7 +28,6 @@ return new class extends Migration
             $table->string('validity')->nullable();
             $table->string('certificate_number')->nullable();
             $table->string('payment_proof')->nullable();
-            $table->integer('order_number')->nullable(); // nomor urut pendaftar
             $table->text('encrypted_name')->nullable();
             $table->string('data_hash')->nullable();
 

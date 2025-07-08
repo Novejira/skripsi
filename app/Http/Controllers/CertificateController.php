@@ -29,7 +29,7 @@ class CertificateController extends Controller
         public function storePendaftaran(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|min:3|max:255',
+            'participant_name' => 'required|string|min:3|max:255',
             'student_id' => 'required|numeric',
             'birth_place' => 'required|string',
             'birth_date' => 'required|date',
@@ -43,7 +43,7 @@ class CertificateController extends Controller
         // Simpan ke database
         $certificate = CreateCertificate::create([
             'uuid' => Str::uuid(),
-            'name' => $request->participant_name,
+            'participant_name' => $request->participant_name,
             'student_id' => $request->student_id,
             'birth_place' => $request->birth_place,
             'birth_date' => $request->birth_date,

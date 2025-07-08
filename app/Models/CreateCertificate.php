@@ -23,7 +23,7 @@ class CreateCertificate extends Model
     }
 
     protected $fillable = [
-    'name',
+    'participant_name',
     'file_name',
     'birth_place',
     'birth_date',
@@ -38,7 +38,6 @@ class CreateCertificate extends Model
     'toeic',
     'score',
     'payment_proof',
-    'order_number',
     'encrypted_name',
     'data_hash',
 
