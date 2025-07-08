@@ -310,25 +310,6 @@ class CertificateController extends Controller
         $font->valign('top');
     }
 
-        public function store(Request $request)
-    {
-        // hitung jumlah pendaftar sebelumnya
-        $order = Certificate::count() + 1;
-
-        // buat format nomor sertifikat
-        $formattedOrder = str_pad($order, 3, '0', STR_PAD_LEFT); // jadi 001, 002, dst
-        $certNumber = "$formattedOrder/Sert/TOEFL/03/CEdEC/2025";
-
-        Certificate::create([
-            'user_id' => auth()->id(),
-            'order_number' => $order,
-            'certificate_number' => $certNumber,
-            // data lain
-        ]);
-
-        return redirect()->route('admin.form'); // atau step berikutnya
-    }
-
         public function scanLogs()
     {
         $logs = QrScanLog::with('certificate')->latest()->paginate(10);
