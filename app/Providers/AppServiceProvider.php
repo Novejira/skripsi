@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Config;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,10 +22,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-            if (env('APP_ENV') === 'production') {
+        if (app()->environment('production')) {
+            // Paksa HTTPS jika di production
             URL::forceScheme('https');
-        }
-            if (app()->environment('production')) {
+
+            // Set konfigurasi session agar cookie aman
+            Config::set('session.secure', true);
+            Config::set('session.same_site', 'lax');
+            Config::set('session.domain', 'e-certification-cedec.up.railway.app');
+
+            // Clear cache untuk config & route
             Artisan::call('config:clear');
             Artisan::call('cache:clear');
         }
