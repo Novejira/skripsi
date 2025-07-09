@@ -20,7 +20,7 @@
                         </div>
                     @endif
 
-                        <form action="{{ route('certificate.to-admin') }}" method="POST" enctype="multipart/form-data">
+                    <form action="{{ route('certificate.to-admin') }}" method="POST" enctype="multipart/form-data">
                         @csrf
 
                         <div class="mb-3">
@@ -30,12 +30,12 @@
 
                         <div class="mb-3">
                             <label for="birth_place" class="form-label">Tempat Lahir</label>
-                            <input type="text" class="form-control" id="birth_place" name="birth_place" value="{{ old('birth_place') }}"required>
+                            <input type="text" class="form-control" id="birth_place" name="birth_place" value="{{ old('birth_place') }}" required>
                         </div>
 
                         <div class="mb-3">
                             <label for="birth_date" class="form-label">Tanggal Lahir</label>
-                            <input type="date" class="form-control" id="birth_date" name="birth_date" placeholder="cth: 26 Juni 2002" value="{{ old('birth_date') }}"required>
+                            <input type="date" class="form-control" id="birth_date" name="birth_date" value="{{ old('birth_date') }}" required>
                         </div>
 
                         <div class="mb-3">
@@ -45,7 +45,16 @@
 
                         <div class="mb-3">
                             <label for="institution" class="form-label">Asal Institusi</label>
-                            <input type="text" class="form-control" id="institution" name="institution" value="{{ old('institution') }}"required>
+                            <input type="text" class="form-control" id="institution" name="institution" value="{{ old('institution') }}" required>
+                        </div>
+
+                        {{-- Dropdown Batch TOEFL --}}
+                        <div class="mb-3">
+                            <label for="batch" class="form-label">Batch TOEFL</label>
+                            <select class="form-select" id="batch" name="batch" required>
+                                <option value="" disabled selected>Pilih Batch</option>
+                                <option value="03" {{ old('batch') == '03' ? 'selected' : '' }}>Batch 03</option>
+                            </select>
                         </div>
 
                         <div class="mb-3">
@@ -62,7 +71,6 @@
                             <strong>Biaya:</strong> TOEFL Rp300.000<br>
                             <em>Dihimbau untuk tidak melakukan transaksi melalui rekening pribadi siapapun selain rekening resmi kampus.</em>
                         </div>
-
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-success btn-lg">DAFTAR</button>

@@ -30,6 +30,7 @@ return new class extends Migration
             $table->string('payment_proof')->nullable();
             $table->text('encrypted_name')->nullable();
             $table->string('data_hash')->nullable();
+            $table->string('batch')->nullable();
 
             $table->timestamps();
         });

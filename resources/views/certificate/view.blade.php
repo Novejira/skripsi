@@ -20,17 +20,6 @@
 </head>
 <body class="p-5">
 
-    {{-- ✅ Validity message --}}
-    @if (isset($valid) && $valid)
-        <div class="alert alert-success">
-            This certificate is <strong>valid</strong> ✅
-        </div>
-    @else
-        <div class="alert alert-danger">
-            This certificate is <strong>not valid</strong> ❌ — data may have been tampered or corrupted.
-        </div>
-    @endif
-
     <div class="row">
         <div class="col-md-8">
             <table>

@@ -29,6 +29,7 @@ class CreateCertificate extends Model
     'birth_date',
     'student_id',
     'institution',
+    'batch',
     'validity',
     'test_date',
     'certificate_number',

@@ -34,6 +34,7 @@ class CertificateController extends Controller
             'birth_place' => 'required|string',
             'birth_date' => 'required|date',
             'institution' => 'required|string',
+            'batch' => 'required',
             'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:1000',
         ]);
 
@@ -48,6 +49,7 @@ class CertificateController extends Controller
             'birth_place' => $request->birth_place,
             'birth_date' => $request->birth_date,
             'institution' => $request->institution,
+            'batch' => $request->batch,
             'payment_proof' => $paymentProofPath,
         ]);
 
@@ -97,7 +99,7 @@ class CertificateController extends Controller
         // Hitung urutan berdasarkan CreateCertificate
         $order = CreateCertificate::count() + 1;
         $formattedOrder = str_pad($order, 3, '0', STR_PAD_LEFT);
-        $certNumber = "$formattedOrder/Sert/TOEFL/03/CEdEC/2025";
+        $certNumber = "$formattedOrder/Sert/TOEFL/" . str_pad($participant['batch'], 2, '0', STR_PAD_LEFT) . "/CEdEC/2025";
 
         $data = array_merge($participant, $request->only(['test_date', 'validity']));
         $data['certificate_number'] = $certNumber; // generate otomatis
@@ -149,7 +151,7 @@ class CertificateController extends Controller
 
         $order = CreateCertificate::where('created_at', '<=', $participant->created_at)->count();
         $formattedOrder = str_pad($order, 3, '0', STR_PAD_LEFT);
-        $certificateNumber = "$formattedOrder/Sert/TOEFL/03/CEdEC/2025";
+        $certificateNumber = "$formattedOrder/Sert/TOEFL/" . str_pad($participant->batch, 2, '0', STR_PAD_LEFT) . "/CEdEC/2025";
 
         if (!$participant->certificate_number) {
             $participant->certificate_number = $certificateNumber;
