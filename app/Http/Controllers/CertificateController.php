@@ -54,7 +54,7 @@ class CertificateController extends Controller
         ]);
 
         // Redirect ke form admin dengan membawa UUID peserta tersebut
-        return redirect()->route('certificate.participants')->with('success', 'Pendaftaran berhasil!');
+        return redirect()->route('whatsapp.info')->with('success', 'Pendaftaran berhasil!');
     }
 
         public function storeGlobalSettings(Request $request)
@@ -114,11 +114,43 @@ class CertificateController extends Controller
     }
 
 
-    public function listParticipants()
+        public function listParticipants(Request $request)
     {
-        $participants = CreateCertificate::orderBy('created_at', 'asc')->get();
-        return view('certificate.participant_list', compact('participants'));
+        $query = CreateCertificate::query();
+
+        // Filter batch
+        if ($request->filled('batch')) {
+            $query->where('batch', $request->batch);
+        }
+
+        // Filter status skor (sudah atau belum isi skor)
+        if ($request->filled('has_score')) {
+            if ($request->has_score === 'yes') {
+                $query->whereNotNull('score');
+            } elseif ($request->has_score === 'no') {
+                $query->whereNull('score');
+            }
+        }
+
+        // ✅ Filter pencarian nama atau institusi
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('participant_name', 'like', "%{$search}%")
+                ->orWhere('institution', 'like', "%{$search}%");
+            });
+        }
+
+        $participants = $query->orderBy('created_at', 'asc')->get();
+
+        return view('certificate.participant_list', [
+            'participants' => $participants,
+            'selectedBatch' => $request->batch,
+            'selectedHasScore' => $request->has_score,
+        ]);
     }
+
+
 
     public function showScoreForm($uuid)
     {
@@ -184,7 +216,7 @@ class CertificateController extends Controller
         $img->place($qrImage, 'bottom-left', 740, 600);
         $img->save($outputPath);
 
-                // 🔐 Enkripsi nama peserta
+        // 🔐 Enkripsi nama peserta
         $encryptedName = SecurityHelper::encryptAES($participant->participant_name);
 
         // 🔐 Buat hash dari data penting untuk verifikasi integritas
@@ -289,19 +321,30 @@ class CertificateController extends Controller
         return $pdf->download('sertifikat_' . Str::slug($certificate->name) . '.pdf');
     }
 
-    public function deleteParticipant($uuid)
+        public function deleteParticipant($uuid)
     {
         $participant = CreateCertificate::findOrFail($uuid);
-        $filePath = public_path('generated_certificates/' . $participant->file_name);
-        if (file_exists($filePath)) unlink($filePath);
 
+        // Hapus file sertifikat jika ada
+        if (!empty($participant->file_name)) {
+            $filePath = public_path('generated_certificates/' . $participant->file_name);
+            if (file_exists($filePath) && is_file($filePath)) {
+                unlink($filePath);
+            }
+        }
+
+        // Hapus file QR code jika ada
         $qrPath = public_path('generated_certificates/qr_' . $participant->id . '.png');
-        if (file_exists($qrPath)) unlink($qrPath);
+        if (file_exists($qrPath) && is_file($qrPath)) {
+            unlink($qrPath);
+        }
 
+        // Hapus data di database
         $participant->delete();
 
         return redirect()->route('certificate.participants')->with('success', 'Data berhasil dihapus.');
     }
+
 
     private function applyFont($font, $fontPath, $size = 30, $align = 'left')
     {

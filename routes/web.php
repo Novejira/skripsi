@@ -26,3 +26,6 @@ Route::post('/certificate/participants/{uuid}/score', [CertificateController::cl
 Route::get('/certificate/view/{uuid}', [CertificateController::class, 'view'])->name('certificate.view');
 Route::get('/certificate/download-pdf/{uuid}', [CertificateController::class, 'downloadPdf'])->name('certificate.download.pdf');
 Route::get('/admin/qr-scan-logs', [CertificateController::class, 'scanLogs'])->name('admin.qr_scan_logs');
+Route::get('/whatsapp-info', function () {
+    return view('whatsapp-info');
+})->name('whatsapp.info');

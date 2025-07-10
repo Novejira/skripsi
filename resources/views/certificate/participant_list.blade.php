@@ -8,6 +8,8 @@
     <div class="card mb-4 shadow-sm">
         <div class="card-body">
             <h5 class="card-title">Pengaturan Tes TOEFL per Batch</h5>
+
+
             <form method="POST" action="{{ route('certificate.participants.settings') }}">
                 @csrf
 
@@ -38,25 +40,30 @@
         </div>
     </div>
 
+     {{-- Flash message success --}}
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
 
-        <div class="row mb-3">
+    {{-- FILTER: Batch dan Search --}}
+    <form method="GET" action="{{ route('certificate.participants') }}" class="row mb-3">
         <div class="col-md-6">
-            <input type="text" id="searchInput" class="form-control" placeholder="Cari nama atau institusi...">
+            <input type="text" name="search" class="form-control" placeholder="Cari nama atau institusi..." value="{{ request('search') }}">
         </div>
         <div class="col-md-6">
-            <select id="batchFilter" class="form-select">
+            <select name="batch" class="form-select" onchange="this.form.submit()">
                 <option value="">Semua Batch</option>
-                @php
-                    $batches = $participants->pluck('batch')->unique()->sort();
-                @endphp
-                @foreach($batches as $batch)
-                    <option value="{{ $batch }}">{{ $batch }}</option>
+                @foreach($participants->pluck('batch')->unique()->sort() as $batch)
+                    <option value="{{ $batch }}" {{ request('batch') == $batch ? 'selected' : '' }}>{{ $batch }}</option>
                 @endforeach
             </select>
         </div>
-    </div>
+    </form>
 
-
+    {{-- TABEL PESERTA --}}
     <table class="table table-bordered table-striped align-middle text-center table-thick-border">
         <thead>
             <tr>
@@ -71,7 +78,7 @@
             </tr>
         </thead>
         <tbody>
-        @foreach($participants as $index => $participant)
+        @forelse($participants as $index => $participant)
             <tr>
                 <td>{{ $index + 1 }}</td>
                 <td>{{ $participant->participant_name }}</td>
@@ -122,26 +129,13 @@
                         </form>
                     </div>
                 </td>
-
             </tr>
-        @endforeach
-
+        @empty
+            <tr>
+                <td colspan="8">Tidak ada data peserta untuk filter ini.</td>
+            </tr>
+        @endforelse
         </tbody>
     </table>
 </div>
-@endsection
-
-@section('scripts')
-<script>
-    document.getElementById('searchInput').addEventListener('keyup', function () {
-        const query = this.value.toLowerCase();
-        const rows = document.querySelectorAll('tbody tr');
-
-        rows.forEach(row => {
-            const name = row.children[1].textContent.toLowerCase(); // kolom Nama
-            const institution = row.children[3].textContent.toLowerCase(); // kolom Institusi
-            row.style.display = (name.includes(query) || institution.includes(query)) ? '' : 'none';
-        });
-    });
-</script>
 @endsection

@@ -53,6 +53,8 @@
                             <label for="batch" class="form-label">Batch TOEFL</label>
                             <select class="form-select" id="batch" name="batch" required>
                                 <option value="" disabled selected>Pilih Batch</option>
+                                <option value="01" {{ old('batch') == '01' ? 'selected' : '' }}>Batch 01</option>
+                                <option value="02" {{ old('batch') == '02' ? 'selected' : '' }}>Batch 02</option>
                                 <option value="03" {{ old('batch') == '03' ? 'selected' : '' }}>Batch 03</option>
                             </select>
                         </div>
