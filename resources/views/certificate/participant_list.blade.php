@@ -9,7 +9,6 @@
         <div class="card-body">
             <h5 class="card-title">Pengaturan Tes TOEFL per Batch</h5>
 
-
             <form method="POST" action="{{ route('certificate.participants.settings') }}">
                 @csrf
 
@@ -40,13 +39,13 @@
         </div>
     </div>
 
-     {{-- Flash message success --}}
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
+    {{-- Flash message success --}}
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
 
     {{-- FILTER: Batch dan Search --}}
     <form method="GET" action="{{ route('certificate.participants') }}" class="row mb-3">
@@ -81,7 +80,7 @@
         @forelse($participants as $index => $participant)
             <tr>
                 <td>{{ $index + 1 }}</td>
-                <td>{{ $participant->participant_name }}</td>
+                <td>{{ $participant->name }}</td>
                 <td>{{ $participant->student_id }}</td>
                 <td>{{ $participant->institution }}</td>
                 <td>{{ $participant->batch }}</td>
@@ -105,20 +104,21 @@
                         Tidak ada
                     @endif
                 </td>
-
                 <td>
-                    @if ($participant->score !== null)
+                    @if (!empty($participant->score))
                         <span class="badge bg-success">Done</span>
                     @else
                         <span class="badge bg-secondary">Belum</span>
                     @endif
                 </td>
-
                 <td>
                     <div class="d-flex flex-column align-items-center gap-1">
-                        <a href="{{ route('certificate.score.form', $participant->uuid) }}" class="btn btn-sm btn-{{ $participant->score !== null ? 'warning' : 'primary' }}">
-                            <i class="bi bi-pencil-square"></i> {{ $participant->score !== null ? 'Edit Skor' : 'Input Skor' }}
-                        </a>
+                        @if (empty($participant->score))
+                            <a href="{{ route('certificate.score.form', $participant->uuid) }}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-pencil-square"></i> Input Skor
+                            </a>
+                        @endif
+
 
                         <form action="{{ route('certificate.delete', $participant->uuid) }}" method="POST" onsubmit="return confirm('Yakin mau hapus data ini?')">
                             @csrf

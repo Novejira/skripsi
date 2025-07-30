@@ -10,17 +10,11 @@
             <table class="table">
                 <tr>
                     <th>Certificate Number</th>
-                    <td>{{ $certificate->certificate_number }}</td>
+                    <td>{{ $decrypted_cert_number ?? 'Tidak tersedia' }}</td>
                 </tr>
                 <tr>
                     <th>Participant Name</th>
-                    <td>
-                        @if(isset($valid) && $valid)
-                            {{ $decrypted_name }}
-                        @else
-                            Tidak tersedia
-                        @endif
-                    </td>
+                    <td>{{ $decrypted_name ?? 'Tidak tersedia' }}</td>
                 </tr>
                 <tr>
                     <th>Name Of Activity</th>
@@ -28,18 +22,36 @@
                 </tr>
                 <tr>
                     <th>Date of Test</th>
-                    <td>{{ \Carbon\Carbon::parse($certificate->test_date)->format('d F Y') }}</td>
+                    <td>
+                        @if (!empty($certificate->test_date))
+                            {{ \Carbon\Carbon::parse($certificate->test_date)->translatedFormat('d F Y') }}
+                        @else
+                            -
+                        @endif
+                    </td>
                 </tr>
                 <tr>
                     <th>Valid Until</th>
-                    <td>{{ \Carbon\Carbon::parse($certificate->validity)->format('d F Y') }}</td>
+                    <td>
+                        @if (!empty($certificate->validity))
+                            {{ \Carbon\Carbon::parse($certificate->validity)->translatedFormat('d F Y') }}
+                        @else
+                            -
+                        @endif
+                    </td>
                 </tr>
             </table>
 
             {{-- Tombol Download PDF --}}
-            <a href="{{ route('certificate.download.pdf', $certificate->uuid) }}" class="btn btn-primary mt-3">
-                Download PDF
-            </a>
+            @if ($isValid)
+                <a href="{{ route('certificate.download.pdf', $certificate->uuid) }}" class="btn btn-primary mt-3">
+                    Download PDF
+                </a>
+            @else
+                <div class="alert alert-danger mt-3">
+                    Sertifikat ini tidak valid atau telah diubah.
+                </div>
+            @endif
         </div>
 
         {{-- Kolom Kanan: Preview Sertifikat --}}
@@ -47,7 +59,11 @@
             <div class="card shadow-sm">
                 <div class="card-body text-center">
                     <h5 class="card-title mb-3">Preview Sertifikat</h5>
-                    <img src="{{ asset('generated_certificates/' . $certificate->file_name) }}" alt="Gambar Sertifikat" class="img-fluid rounded">
+                    @if (!empty($certificate->file_name))
+                        <img src="{{ asset('generated_certificates/' . $certificate->file_name) }}" alt="Gambar Sertifikat" class="img-fluid rounded">
+                    @else
+                        <p class="text-muted">Belum ada gambar sertifikat</p>
+                    @endif
                 </div>
             </div>
         </div>

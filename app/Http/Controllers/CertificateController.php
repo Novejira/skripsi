@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use App\Models\Certificate;
 use App\Models\CreateCertificate;
@@ -16,6 +18,7 @@ use Carbon\Carbon;
 use App\Helpers\SecurityHelper;
 use App\Models\QrScanLog;
 use Illuminate\Support\Facades\URL;
+use App\Mail\CertificateSent;
 
 
 
@@ -34,6 +37,7 @@ class CertificateController extends Controller
             'birth_place' => 'required|string',
             'birth_date' => 'required|date',
             'institution' => 'required|string',
+            'email' => 'required|email',
             'batch' => 'required',
             'payment_proof' => 'required|image|mimes:jpeg,png,jpg|max:1000',
         ]);
@@ -41,21 +45,31 @@ class CertificateController extends Controller
         // Simpan bukti pembayaran ke storage
         $paymentProofPath = $request->file('payment_proof')->store('payment_proofs', 'public');
 
+        // 🔐 Enkripsi data dari form
+        $encryptedName = SecurityHelper::encryptAES($request->participant_name);
+        $encryptedNIM = SecurityHelper::encryptAES($request->student_id);
+        $encryptedBirthPlace = SecurityHelper::encryptAES($request->birth_place);
+        $encryptedBirthDate = SecurityHelper::encryptAES($request->birth_date);
+        $encryptedInstitution = SecurityHelper::encryptAES($request->institution);
+        $encryptedEmail = SecurityHelper::encryptAES($request->email);
+
         // Simpan ke database
-        $certificate = CreateCertificate::create([
+        CreateCertificate::create([
             'uuid' => Str::uuid(),
-            'participant_name' => $request->participant_name,
-            'student_id' => $request->student_id,
-            'birth_place' => $request->birth_place,
-            'birth_date' => $request->birth_date,
-            'institution' => $request->institution,
+            'encrypted_name' => $encryptedName,
+            'encrypted_student_id' => $encryptedNIM,
+            'encrypted_birth_place' => $encryptedBirthPlace,
+            'encrypted_birth_date' => $encryptedBirthDate,
+            'encrypted_institution' => $encryptedInstitution,
+            'encrypted_email' => $encryptedEmail,
             'batch' => $request->batch,
             'payment_proof' => $paymentProofPath,
+            'file_name' => 'pending.png',
         ]);
 
-        // Redirect ke form admin dengan membawa UUID peserta tersebut
         return redirect()->route('whatsapp.info')->with('success', 'Pendaftaran berhasil!');
     }
+
 
         public function storeGlobalSettings(Request $request)
     {
@@ -116,6 +130,8 @@ class CertificateController extends Controller
 
         public function listParticipants(Request $request)
     {
+
+
         $query = CreateCertificate::query();
 
         // Filter batch
@@ -143,6 +159,18 @@ class CertificateController extends Controller
 
         $participants = $query->orderBy('created_at', 'asc')->get();
 
+        $participants = CreateCertificate::orderBy('created_at')->get()->map(function ($item) {
+            return (object) [
+                'uuid' => $item->uuid,
+                'name' => SecurityHelper::decryptAES($item->encrypted_name),
+                'student_id' => SecurityHelper::decryptAES($item->encrypted_student_id),
+                'institution' => SecurityHelper::decryptAES($item->encrypted_institution),
+                'batch' => $item->batch,
+                'payment_proof' => $item->payment_proof,
+                'score' => $item->enc_score,
+            ];
+        });
+
         return view('certificate.participant_list', [
             'participants' => $participants,
             'selectedBatch' => $request->batch,
@@ -158,8 +186,9 @@ class CertificateController extends Controller
         return view('certificate.score_form', compact('participant'));
     }
 
-    public function storeScoreAndGenerate(Request $request, $uuid, Generator $qr)
+        public function storeScoreAndGenerate(Request $request, $uuid, Generator $qr)
     {
+        // 1. Validasi input skor
         $request->validate([
             'listening' => 'required|numeric|min:0|max:500',
             'reading' => 'required|numeric|min:0|max:500',
@@ -168,118 +197,160 @@ class CertificateController extends Controller
         ]);
 
         $totalScore = $request->listening + $request->reading;
-
         $participant = CreateCertificate::findOrFail($uuid);
 
+        // 2. Load template dan font
         $imageManager = new ImageManager(new GdDriver());
         $templatePath = public_path('certificates/certificate_template.png');
+        $fontPath = public_path('fonts/OpenSans-Regular.ttf');
+
         if (!file_exists($templatePath)) {
             return back()->withErrors(['Template tidak ditemukan']);
         }
-
-        $img = $imageManager->read($templatePath);
-        $fontPath = public_path('fonts/OpenSans-Regular.ttf');
         if (!file_exists($fontPath)) $fontPath = null;
 
-        $order = CreateCertificate::where('created_at', '<=', $participant->created_at)->count();
-        $formattedOrder = str_pad($order, 3, '0', STR_PAD_LEFT);
-        $certificateNumber = "$formattedOrder/Sert/TOEFL/" . str_pad($participant->batch, 2, '0', STR_PAD_LEFT) . "/CEdEC/2025";
+        $img = $imageManager->read($templatePath);
 
+        // 3. Hitung dan set nomor sertifikat
         if (!$participant->certificate_number) {
-            $participant->certificate_number = $certificateNumber;
+            $order = CreateCertificate::where('created_at', '<=', $participant->created_at)->count();
+            $formattedOrder = str_pad($order, 3, '0', STR_PAD_LEFT);
+            $certificateNumber = "$formattedOrder/Sert/TOEFL/" . str_pad($participant->batch, 2, '0', STR_PAD_LEFT) . "/CEdEC/2025";
+            $participant->encrypted_certificate_number = SecurityHelper::encryptAES($certificateNumber);
         }
 
-        $img->text(strtoupper($participant->participant_name), 122, 580, fn($f) => $this->applyFont($f, $fontPath));
-        $img->text(strtoupper($participant->birth_place), 122, 675, fn($f) => $this->applyFont($f, $fontPath));
-        $img->text(Carbon::parse($participant->birth_date)->format('d/m/Y'), 122, 775, fn($f) => $this->applyFont($f, $fontPath));
-        $img->text(strtoupper($participant->student_id), 122, 870, fn($f) => $this->applyFont($f, $fontPath));
-        $img->text(strtoupper($participant->institution), 750, 580, fn($f) => $this->applyFont($f, $fontPath));
-        $img->text($participant->certificate_number, 750, 865, fn($f) => $this->applyFont($f, $fontPath));
-        $img->text(Carbon::parse($participant->test_date)->format('d/m/Y'), 750, 675, fn($f) => $this->applyFont($f, $fontPath));
-        $img->text(Carbon::parse($participant->validity)->format('d/m/Y'),750, 770, fn($f) => $this->applyFont($f, $fontPath));
+        // 4. Dekripsi data untuk ditampilkan
+        $decryptedData = [
+            'name'         => SecurityHelper::decryptAES($participant->encrypted_name),
+            'nim'          => SecurityHelper::decryptAES($participant->encrypted_student_id),
+            'birth_place'  => SecurityHelper::decryptAES($participant->encrypted_birth_place),
+            'birth_date'   => SecurityHelper::decryptAES($participant->encrypted_birth_date),
+            'institution'  => SecurityHelper::decryptAES($participant->encrypted_institution),
+            'cert_number'  => SecurityHelper::decryptAES($participant->encrypted_certificate_number),
+        ];
 
+        // 5. Tulis teks ke gambar
+        $img->text(strtoupper($decryptedData['name']), 122, 580, fn($f) => $this->applyFont($f, $fontPath));
+        $img->text(strtoupper($decryptedData['birth_place']), 122, 675, fn($f) => $this->applyFont($f, $fontPath));
+        $img->text(Carbon::parse($decryptedData['birth_date'])->format('d/m/Y'), 122, 775, fn($f) => $this->applyFont($f, $fontPath));
+        $img->text(strtoupper($decryptedData['nim']), 122, 870, fn($f) => $this->applyFont($f, $fontPath));
+        $img->text(strtoupper($decryptedData['institution']), 750, 580, fn($f) => $this->applyFont($f, $fontPath));
+        $img->text($decryptedData['cert_number'], 750, 865, fn($f) => $this->applyFont($f, $fontPath));
+        $img->text(Carbon::parse($participant->test_date)->format('d/m/Y'), 750, 675, fn($f) => $this->applyFont($f, $fontPath));
+        $img->text(Carbon::parse($participant->validity)->format('d/m/Y'), 750, 770, fn($f) => $this->applyFont($f, $fontPath));
+
+        // 6. Tulis skor ke gambar
         $img->text($request->listening, 255, 1065, fn($f) => $this->applyFont($f, $fontPath, 80, 'center'));
         $img->text($request->reading, 700, 1065, fn($f) => $this->applyFont($f, $fontPath, 80, 'center'));
+        $img->text($totalScore, 1135, 1065, fn($f) => $this->applyFont($f, $fontPath, 80, 'center'));
         $img->text($request->toefl, 260, 1290, fn($f) => $this->applyFont($f, $fontPath, 60, 'center'));
         $img->text($request->toeic, 550, 1290, fn($f) => $this->applyFont($f, $fontPath, 60, 'center'));
-        $img->text($totalScore, 1135, 1065, fn($f) => $this->applyFont($f, $fontPath, 80, 'center'));
 
-        $fileName = 'certificate_' . uniqid() . '.png';
+        // 7. Simpan gambar dan QR
+        $fileName = 'cert_' . Str::uuid() . '.png';
         $outputPath = public_path('generated_certificates/' . $fileName);
         if (!file_exists(dirname($outputPath))) mkdir(dirname($outputPath), 0777, true);
 
         $url = URL::signedRoute('certificate.view', ['uuid' => $participant->uuid]);
-
         $qrPath = public_path('generated_certificates/qr_' . $participant->uuid . '.png');
         file_put_contents($qrPath, $qr->format('png')->size(200)->generate($url));
+
         $qrImage = $imageManager->read($qrPath);
         $img->place($qrImage, 'bottom-left', 740, 600);
         $img->save($outputPath);
 
-        // 🔐 Enkripsi nama peserta
-        $encryptedName = SecurityHelper::encryptAES($participant->participant_name);
+        $pdfPath = public_path('generated_certificates/pdf_' . Str::uuid() . '.pdf');
+        $pdf = Pdf::loadView('certificate.pdf_view', [
+            'certificate' => $participant,
+            'imagePath' => $outputPath
+        ])->setPaper('a4');
+        $pdf->save($pdfPath);
 
-        // 🔐 Buat hash dari data penting untuk verifikasi integritas
+        $email = SecurityHelper::decryptAES($participant->encrypted_email);
+        if ($email) {
+            Mail::to($email)->send(new CertificateSent((object)[
+                'name' => $decryptedData['name'],
+                'batch' => $participant->batch
+
+            ], $pdfPath));
+        }
+
+
+        // 8. Enkripsi data skor
+        $encryptedFields = [
+            'encrypted_name'               => SecurityHelper::encryptAES($decryptedData['name']),
+            'encrypted_student_id'        => SecurityHelper::encryptAES($decryptedData['nim']),
+            'encrypted_birth_place'       => SecurityHelper::encryptAES($decryptedData['birth_place']),
+            'encrypted_birth_date'        => SecurityHelper::encryptAES($decryptedData['birth_date']),
+            'encrypted_institution'       => SecurityHelper::encryptAES($decryptedData['institution']),
+            'encrypted_certificate_number'=> SecurityHelper::encryptAES($decryptedData['cert_number']),
+            'enc_listening'               => SecurityHelper::encryptAES($request->listening),
+            'enc_reading'                 => SecurityHelper::encryptAES($request->reading),
+            'enc_score'                   => SecurityHelper::encryptAES($totalScore),
+            'enc_toefl'                   => SecurityHelper::encryptAES($request->toefl),
+            'enc_toeic'                   => SecurityHelper::encryptAES($request->toeic),
+        ];
+
+        // 9. Hash integritas data
         $dataHash = SecurityHelper::createSHA256Hash([
-            $encryptedName,
-            $participant->birth_place,
-            $participant->birth_date,
-            $participant->student_id,
-            $participant->institution,
-            $participant->certificate_number,
-            $participant->test_date,
-            $participant->validity,
-            $request->listening,
-            $request->toefl,
-            $request->toeic,
-            $request->reading,
-            $totalScore,
+            $encryptedFields['encrypted_name'],
+            $encryptedFields['encrypted_student_id'],
+            $encryptedFields['encrypted_birth_place'],
+            $encryptedFields['encrypted_birth_date'],
+            $encryptedFields['encrypted_institution'],
+            $encryptedFields['encrypted_certificate_number'],
+            $encryptedFields['enc_listening'],
+            $encryptedFields['enc_reading'],
+            $encryptedFields['enc_score'],
+            $encryptedFields['enc_toefl'],
+            $encryptedFields['enc_toeic'],
+            $request->test_date,
+            $request->validity,
         ]);
 
+        // 10. Simpan ke database
+        $participant->update(array_merge($encryptedFields, [
+            'test_date'   => $request->test_date ?? $participant->test_date,
+            'validity'    => $request->validity ?? $participant->validity,
+            'file_name'   => $fileName,
+            'data_hash'   => $dataHash,
+        ]));
 
-        $participant->update([
-            'certificate_number' => $participant->certificate_number,
-            'listening' => $request->listening,
-            'toefl' => $request->toefl,
-            'toeic' => $request->toeic,
-            'reading' => $request->reading,
-            'score' => $totalScore,
-            'file_name' => $fileName,
-            'encrypted_name' => $encryptedName,
-            'data_hash' => $dataHash,
+        return redirect()->route('certificate.participants')
+            ->with('success', 'Sertifikat berhasil digenerate dan telah dikirim ke email peserta.');
 
-        ]);
-
-        return view('certificate.display_image', [
-            'certificateData' => $participant,
-            'fileName' => $fileName,
-        ]);
+        // 11. Tampilkan hasil
+        // return view('certificate.display_image', [
+        //     'certificateData' => $participant,
+        //     'fileName' => $fileName,
+        // ]);
     }
+
 
         public function view($uuid, Request $request)
     {
          if (!$request->hasValidSignature()) {
-        abort(403, 'Link tidak valid atau sudah kedaluwarsa.');
-    }
+            abort(403, 'Link tidak valid atau sudah kedaluwarsa.');
+        }
+
         $certificate = CreateCertificate::where('uuid', $uuid)->firstOrFail();
 
-        // ✅ Rekalkulasi ulang hash
+        // ✅ Rekalkulasi ulang hash dengan urutan dan data terenkripsi yang identik
         $recalculatedHash = SecurityHelper::createSHA256Hash([
             $certificate->encrypted_name,
-            $certificate->birth_place,
-            $certificate->birth_date,
-            $certificate->student_id,
-            $certificate->institution,
-            $certificate->certificate_number,
+            $certificate->encrypted_student_id,
+            $certificate->encrypted_birth_place,
+            $certificate->encrypted_birth_date,
+            $certificate->encrypted_institution,
+            $certificate->encrypted_certificate_number,
+            $certificate->enc_listening,
+            $certificate->enc_reading,
+            $certificate->enc_score,
+            $certificate->enc_toefl,
+            $certificate->enc_toeic,
             $certificate->test_date,
             $certificate->validity,
-            $certificate->listening,
-            $certificate->toefl,
-            $certificate->toeic,
-            $certificate->reading,
-            $certificate->score,
         ]);
-
 
         $isValid = $recalculatedHash === $certificate->data_hash;
 
@@ -291,20 +362,67 @@ class CertificateController extends Controller
             'is_valid' => $isValid,
         ]);
 
-        if ($isValid) {
-            $decryptedName = SecurityHelper::decryptAES($certificate->encrypted_name);
+            if ($isValid) {
+            $decryptedData = [
+                'name' => SecurityHelper::decryptData($certificate->encrypted_name),
+                'nim' => SecurityHelper::decryptData($certificate->encrypted_nim),
+                'birth_place' => SecurityHelper::decryptData($certificate->encrypted_birth_place),
+                'address' => SecurityHelper::decryptData($certificate->encrypted_address),
+                'certificate_number' => SecurityHelper::decryptData($certificate->encrypted_certificate_number),
+                'listening_score' => SecurityHelper::decryptData($certificate->encrypted_listening_score),
+                'reading_score' => SecurityHelper::decryptData($certificate->encrypted_reading_score),
+                'total_score' => SecurityHelper::decryptData($certificate->encrypted_total_score),
+                'toefl_score' => SecurityHelper::decryptData($certificate->encrypted_toefl_score),
+                'toeic_score' => SecurityHelper::decryptData($certificate->encrypted_toeic_score),
+            ];
+        // if ($isValid) {
+        //     $decryptedName = SecurityHelper::decryptAES($certificate->encrypted_name);
+        //     $decryptedCertNumber = SecurityHelper::decryptAES($certificate->encrypted_certificate_number);
 
             return view('certificate.view', [
                 'certificate' => $certificate,
-                'decrypted_name' => $decryptedName,
-                'valid' => true,
+                'isValid' => true,
+                'decryptedData' => $decryptedData
+                // 'decrypted_name' => $decryptedName,
+                // 'decrypted_cert_number' => $decryptedCertNumber,
+                // 'valid' => true,
             ]);
         } else {
             return view('certificate.view', [
                 'certificate' => $certificate,
-                'valid' => false,
+                // 'decrypted_name' => null,
+                // 'decrypted_cert_number' => null,
+                // 'valid' => false,
+                'certificate' => $certificate,
+                'isValid' => false,
+                'decryptedData' => null
+
+
             ]);
         }
+
+        // $certificate = CreateCertificate::where('uuid', $uuid)->firstOrFail();
+
+        // $decryptedData = [
+        //     'name' => SecurityHelper::decryptAES($certificate->encrypted_name),
+        //     'student_id' => SecurityHelper::decryptAES($certificate->encrypted_student_id),
+        //     'birth_place' => SecurityHelper::decryptAES($certificate->encrypted_birth_place),
+        //     'birth_date' => SecurityHelper::decryptAES($certificate->encrypted_birth_date),
+        //     'institution' => SecurityHelper::decryptAES($certificate->encrypted_institution),
+        //     'certificate_number' => SecurityHelper::decryptAES($certificate->encrypted_certificate_number),
+        //     'listening' => SecurityHelper::decryptAES($certificate->enc_listening),
+        //     'reading' => SecurityHelper::decryptAES($certificate->enc_reading),
+        //     'score' => SecurityHelper::decryptAES($certificate->enc_score),
+        //     'toefl' => SecurityHelper::decryptAES($certificate->enc_toefl),
+        //     'toeic' => SecurityHelper::decryptAES($certificate->enc_toeic),
+        // ];
+
+        // return view('certificate.view', [
+        //     'certificate' => $certificate,
+        //     'decrypted' => $decryptedData,
+        //     'valid' => $isValid,
+        // ]);
+
     }
 
     public function downloadPdf($uuid)

@@ -23,24 +23,31 @@ class CreateCertificate extends Model
     }
 
     protected $fillable = [
-    'participant_name',
-    'file_name',
-    'birth_place',
-    'birth_date',
-    'student_id',
-    'institution',
-    'batch',
-    'validity',
-    'test_date',
-    'certificate_number',
-    'listening',
-    'reading',
-    'toefl',
-    'toeic',
-    'score',
-    'payment_proof',
-    'encrypted_name',
-    'data_hash',
+       // Data pribadi peserta terenkripsi
+        'encrypted_name',
+        'encrypted_student_id',
+        'encrypted_birth_place',
+        'encrypted_birth_date',
+        'encrypted_institution',
+        'encrypted_email',
+
+        // Sertifikat
+        'encrypted_certificate_number',
+        'file_name',
+        'test_date',
+        'validity',
+        'batch',
+        'payment_proof',
+
+        // Skor-skor terenkripsi
+        'enc_listening',
+        'enc_reading',
+        'enc_score',
+        'enc_toefl',
+        'enc_toeic',
+
+        // Keamanan
+        'data_hash',
 
 ];
 }

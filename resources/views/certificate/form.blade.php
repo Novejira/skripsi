@@ -48,6 +48,12 @@
                             <input type="text" class="form-control" id="institution" name="institution" value="{{ old('institution') }}" required>
                         </div>
 
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="text" class="form-control" id="email" name="email" value="{{ old('email') }}" required>
+                        </div>
+
+
                         {{-- Dropdown Batch TOEFL --}}
                         <div class="mb-3">
                             <label for="batch" class="form-label">Batch TOEFL</label>
